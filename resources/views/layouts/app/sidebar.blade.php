@@ -118,33 +118,45 @@
                 </flux:sidebar.group>
 
                 <flux:sidebar.group
-                    :heading="__('Segera Hadir')"
-                    class="mt-4 grid"
-                >
-                    <flux:sidebar.item
-                        icon="book-open-text"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Materi dan Misi') }}
-                    </flux:sidebar.item>
+    :heading="__('Menu Belajar')"
+    class="grid"
+>
+    <flux:sidebar.item
+        icon="book-open-text"
+        :href="route('student.missions.index')"
+        :current="request()->routeIs('student.missions.*')"
+        wire:navigate
+    >
+        {{ __('Misi Pembelajaran') }}
+    </flux:sidebar.item>
 
-                    <flux:sidebar.item
-                        icon="users"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Monitoring Peserta Didik') }}
-                    </flux:sidebar.item>
+    <flux:sidebar.item
+        icon="chart-bar"
+        :href="route('student.progress.index')"
+        :current="request()->routeIs('student.progress.*')"
+        wire:navigate
+    >
+        {{ __('Progress dan XP') }}
+    </flux:sidebar.item>
 
-                    <flux:sidebar.item
-                        icon="chart-bar"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Hasil Pembelajaran') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    <flux:sidebar.item
+        icon="trophy"
+        :href="route('student.badges.index')"
+        :current="request()->routeIs('student.badges.*')"
+        wire:navigate
+    >
+        {{ __('Badge') }}
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="folder-open"
+        :href="route('student.portfolio.index')"
+        :current="request()->routeIs('student.portfolio.*')"
+        wire:navigate
+    >
+        {{ __('E-Portfolio') }}
+    </flux:sidebar.item>
+</flux:sidebar.group>
 
             @elseif ($user->isStudent())
                 <flux:sidebar.group
@@ -162,33 +174,45 @@
                 </flux:sidebar.group>
 
                 <flux:sidebar.group
-                    :heading="__('Segera Hadir')"
-                    class="mt-4 grid"
-                >
-                    <flux:sidebar.item
-                        icon="book-open-text"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Misi Pembelajaran') }}
-                    </flux:sidebar.item>
+            :heading="__('Menu Belajar')"
+             class="mt-4 grid"
+>
+    <flux:sidebar.item
+        icon="book-open-text"
+        :href="route('student.missions.index')"
+        :current="request()->routeIs('student.missions.*')"
+        wire:navigate
+    >
+        {{ __('Misi Pembelajaran') }}
+    </flux:sidebar.item>
 
-                    <flux:sidebar.item
-                        icon="chart-bar"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Progress dan XP') }}
-                    </flux:sidebar.item>
+    <flux:sidebar.item
+        icon="chart-bar"
+        :href="route('student.progress.index')"
+        :current="request()->routeIs('student.progress.*')"
+        wire:navigate
+    >
+        {{ __('Progress dan XP') }}
+    </flux:sidebar.item>
 
-                    <flux:sidebar.item
-                        icon="trophy"
-                        href="#"
-                        class="pointer-events-none opacity-50"
-                    >
-                        {{ __('Badge') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    <flux:sidebar.item
+        icon="trophy"
+        :href="route('student.badges.index')"
+        :current="request()->routeIs('student.badges.*')"
+        wire:navigate
+    >
+        {{ __('Badge') }}
+    </flux:sidebar.item>
+
+    <flux:sidebar.item
+        icon="folder-open"
+        :href="route('student.portfolio.index')"
+        :current="request()->routeIs('student.portfolio.*')"
+        wire:navigate
+    >
+        {{ __('E-Portfolio') }}
+    </flux:sidebar.item>
+</flux:sidebar.group>
             @endif
         </flux:sidebar.nav>
 
