@@ -3,10 +3,18 @@
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\UserController;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('admin')
+    ->name('admin.')
+    ->middleware('role:admin')
+    ->group(function () {
+        Route::resource('users', UserController::class)
+            ->except(['show']);
+    });
     /*
      * Mengarahkan pengguna ke dashboard sesuai role.
      */
