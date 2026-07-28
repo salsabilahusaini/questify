@@ -23,16 +23,41 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    --color-accent: var(--color-quest-600);
+    --color-accent-content: var(--color-quest-700);
     --color-accent-foreground: var(--color-white);
+
+        /*
+     * Questify Design System
+     */
+    --color-quest-50: #eff6ff;
+    --color-quest-100: #dbeafe;
+    --color-quest-200: #bfdbfe;
+    --color-quest-300: #93c5fd;
+    --color-quest-400: #60a5fa;
+    --color-quest-500: #3b82f6;
+    --color-quest-600: #2563eb;
+    --color-quest-700: #1d4ed8;
+    --color-quest-800: #1e40af;
+    --color-quest-900: #1e3a8a;
+    --color-quest-950: #172554;
+
+    --color-quest-purple: #8b5cf6;
+    --color-quest-cyan: #06b6d4;
+    --color-quest-emerald: #10b981;
+    --color-quest-amber: #f59e0b;
+    --color-quest-rose: #f43f5e;
+
+    --shadow-quest-sm: 0 8px 24px rgb(30 58 138 / 0.08);
+    --shadow-quest-md: 0 16px 40px rgb(30 58 138 / 0.12);
+    --shadow-quest-lg: 0 24px 60px rgb(30 58 138 / 0.16);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-quest-500);
+        --color-accent-content: var(--color-quest-300);
+        --color-accent-foreground: var(--color-white);
     }
 }
 
@@ -64,3 +89,252 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/*
+|--------------------------------------------------------------------------
+| Questify UI Foundation
+|--------------------------------------------------------------------------
+*/
+
+@layer base {
+    body {
+        min-height: 100vh;
+        background-color: #f8fafc;
+        color: #18181b;
+        font-feature-settings:
+            "rlig" 1,
+            "calt" 1;
+    }
+
+    .dark body {
+        background-color: #09090b;
+        color: #f4f4f5;
+    }
+
+    ::selection {
+        background-color: rgb(59 130 246 / 0.25);
+        color: inherit;
+    }
+}
+
+@layer components {
+    /*
+     * Latar utama halaman dashboard.
+     */
+    .quest-page {
+        position: relative;
+        display: flex;
+        width: 100%;
+        flex: 1;
+        flex-direction: column;
+        gap: 1.5rem;
+        overflow: hidden;
+        border-radius: 1.5rem;
+    }
+
+    /*
+     * Panel sambutan dengan gradient khas Questify.
+     */
+    .quest-hero {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgb(191 219 254 / 0.8);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        background:
+            radial-gradient(
+                circle at 88% 12%,
+                rgb(139 92 246 / 0.18),
+                transparent 32%
+            ),
+            linear-gradient(
+                135deg,
+                rgb(239 246 255 / 0.98),
+                rgb(255 255 255 / 0.98) 55%,
+                rgb(238 242 255 / 0.98)
+            );
+        box-shadow: var(--shadow-quest-sm);
+    }
+
+    .dark .quest-hero {
+        border-color: rgb(59 130 246 / 0.24);
+        background:
+            radial-gradient(
+                circle at 88% 12%,
+                rgb(139 92 246 / 0.22),
+                transparent 34%
+            ),
+            linear-gradient(
+                135deg,
+                rgb(23 37 84 / 0.72),
+                rgb(24 24 27 / 0.96) 56%,
+                rgb(30 27 75 / 0.72)
+            );
+    }
+
+    /*
+     * Kartu umum.
+     */
+    .quest-card {
+        border: 1px solid #e4e4e7;
+        border-radius: 1.25rem;
+        background-color: rgb(255 255 255 / 0.92);
+        box-shadow: var(--shadow-quest-sm);
+        backdrop-filter: blur(12px);
+        transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease;
+    }
+
+    .quest-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: var(--shadow-quest-md);
+        transform: translateY(-2px);
+    }
+
+    .dark .quest-card {
+        border-color: #3f3f46;
+        background-color: rgb(24 24 27 / 0.88);
+    }
+
+    .dark .quest-card:hover {
+        border-color: rgb(59 130 246 / 0.48);
+    }
+
+    /*
+     * Kartu statistik.
+     */
+    .quest-stat-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e4e4e7;
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        background-color: rgb(255 255 255 / 0.94);
+        box-shadow: var(--shadow-quest-sm);
+        transition:
+            transform 180ms ease,
+            border-color 180ms ease,
+            box-shadow 180ms ease;
+    }
+
+    .quest-stat-card::after {
+        position: absolute;
+        right: -1.5rem;
+        top: -1.5rem;
+        width: 6rem;
+        height: 6rem;
+        border-radius: 9999px;
+        background: rgb(59 130 246 / 0.08);
+        content: "";
+    }
+
+    .quest-stat-card:hover {
+        border-color: #bfdbfe;
+        box-shadow: var(--shadow-quest-md);
+        transform: translateY(-3px);
+    }
+
+    .dark .quest-stat-card {
+        border-color: #3f3f46;
+        background-color: rgb(24 24 27 / 0.9);
+    }
+
+    /*
+     * Label kecil di atas judul.
+     */
+    .quest-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        gap: 0.5rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 9999px;
+        padding: 0.4rem 0.75rem;
+        background-color: rgb(239 246 255 / 0.9);
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    .dark .quest-eyebrow {
+        border-color: rgb(59 130 246 / 0.34);
+        background-color: rgb(30 58 138 / 0.28);
+        color: #93c5fd;
+    }
+
+    /*
+     * Tombol utama.
+     */
+    .quest-button-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.85rem;
+        padding: 0.7rem 1.1rem;
+        background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+        color: #ffffff;
+        font-size: 0.875rem;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgb(37 99 235 / 0.25);
+        transition:
+            transform 180ms ease,
+            box-shadow 180ms ease,
+            filter 180ms ease;
+    }
+
+    .quest-button-primary:hover {
+        filter: brightness(1.08);
+        box-shadow: 0 14px 30px rgb(37 99 235 / 0.32);
+        transform: translateY(-1px);
+    }
+
+    .quest-button-primary:active {
+        transform: translateY(0);
+    }
+
+    /*
+     * Badge status.
+     */
+    .quest-badge {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 9999px;
+        padding: 0.35rem 0.7rem;
+        background-color: #dbeafe;
+        color: #1d4ed8;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .dark .quest-badge {
+        background-color: rgb(30 58 138 / 0.48);
+        color: #bfdbfe;
+    }
+
+    /*
+     * Progress bar.
+     */
+    .quest-progress-track {
+        width: 100%;
+        height: 0.6rem;
+        overflow: hidden;
+        border-radius: 9999px;
+        background-color: #e4e4e7;
+    }
+
+    .dark .quest-progress-track {
+        background-color: #3f3f46;
+    }
+
+    .quest-progress-bar {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        box-shadow: 0 0 14px rgb(59 130 246 / 0.35);
+    }
+}
