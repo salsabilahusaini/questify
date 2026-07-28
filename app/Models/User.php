@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string $role
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
@@ -31,6 +32,12 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public const ROLE_ADMIN = 'admin';
+
+    public const ROLE_TEACHER = 'teacher';
+
+    public const ROLE_STUDENT = 'student';
 
     /**
      * Get the attributes that should be cast.
@@ -56,4 +63,36 @@ class User extends Authenticatable
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
     }
+
+    /**
+ * Memeriksa apakah pengguna memiliki role tertentu.
+ */
+public function hasRole(string $role): bool
+{
+    return $this->role === $role;
+}
+
+/**
+ * Memeriksa apakah pengguna merupakan admin.
+ */
+public function isAdmin(): bool
+{
+    return $this->hasRole(self::ROLE_ADMIN);
+}
+
+/**
+ * Memeriksa apakah pengguna merupakan guru.
+ */
+public function isTeacher(): bool
+{
+    return $this->hasRole(self::ROLE_TEACHER);
+}
+
+/**
+ * Memeriksa apakah pengguna merupakan peserta didik.
+ */
+public function isStudent(): bool
+{
+    return $this->hasRole(self::ROLE_STUDENT);
+}
 }
