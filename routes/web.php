@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Student\MissionDetailController;
+use App\Http\Controllers\Student\MissionController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Models\User;
@@ -62,13 +64,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->middleware('role:student')
     ->name('student.dashboard');
 
-    Route::view('/student/missions', 'student.coming-soon', [
-    'title' => 'Misi Pembelajaran',
-    'eyebrow' => 'MISI PEMBELAJARAN',
-    'description' => 'Akses materi, latihan mikro, kuis, dan tantangan pembelajaran yang tersedia dalam setiap misi Questify.',
-])
+    Route::get('/student/missions', MissionController::class)
     ->middleware('role:student')
     ->name('student.missions.index');
+
+    Route::get(
+    '/student/missions/{mission:slug}',
+    MissionDetailController::class
+)
+    ->middleware('role:student')
+    ->name('student.missions.show');
 
 Route::view('/student/progress', 'student.coming-soon', [
     'title' => 'Progress dan XP',
