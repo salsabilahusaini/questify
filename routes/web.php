@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -57,9 +58,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     /*
      * Dashboard khusus Peserta Didik.
      */
-    Route::view('student/dashboard', 'student.dashboard')
-        ->middleware('role:student')
-        ->name('student.dashboard');
+    Route::get('/student/dashboard', StudentDashboardController::class)
+    ->middleware('role:student')
+    ->name('student.dashboard');
 });
 
 require __DIR__.'/settings.php';
