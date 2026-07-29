@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -94,5 +95,65 @@ public function isTeacher(): bool
 public function isStudent(): bool
 {
     return $this->hasRole(self::ROLE_STUDENT);
+}
+/**
+ * Mendapatkan seluruh pengerjaan Pretest pengguna.
+ */
+public function pretestAttempts(): HasMany
+{
+    return $this->hasMany(PretestAttempt::class);
+}
+/**
+ * Mendapatkan seluruh progres pembacaan blok materi pengguna.
+ */
+public function materialBlockProgresses(): HasMany
+{
+    return $this->hasMany(MaterialBlockProgress::class);
+}
+/**
+ * Mendapatkan seluruh pengerjaan Latihan Mikro pengguna.
+ */
+public function microExerciseAttempts(): HasMany
+{
+    return $this->hasMany(MicroExerciseAttempt::class);
+}
+/**
+ * Mendapatkan seluruh pengerjaan Kuis Materi pengguna.
+ */
+public function quizAttempts(): HasMany
+{
+    return $this->hasMany(QuizAttempt::class);
+}
+
+/**
+ * Mendapatkan seluruh pengerjaan Final Challenge pengguna.
+ */
+public function finalChallengeAttempts(): HasMany
+{
+    return $this->hasMany(
+        FinalChallengeAttempt::class,
+        'user_id'
+    );
+}
+
+/**
+ * Mendapatkan seluruh catatan penyelesaian misi pengguna.
+ */
+public function missionCompletions(): HasMany
+{
+    return $this->hasMany(
+        MissionCompletion::class,
+        'user_id'
+    );
+}
+/**
+ * Mendapatkan seluruh badge yang dimiliki pengguna.
+ */
+public function userBadges(): HasMany
+{
+    return $this->hasMany(
+        UserBadge::class,
+        'user_id'
+    );
 }
 }

@@ -8,6 +8,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Student\PretestController;
+use App\Http\Controllers\Student\MaterialController;
+use App\Http\Controllers\Student\MaterialProgressController;
+use App\Http\Controllers\Student\MicroExerciseController;
+use App\Http\Controllers\Student\QuizController;
+use App\Http\Controllers\Student\FinalChallengeController;
+use App\Http\Controllers\Student\ProgressController;
+use App\Http\Controllers\Student\BadgeController;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -75,19 +83,108 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->middleware('role:student')
     ->name('student.missions.show');
 
-Route::view('/student/progress', 'student.coming-soon', [
-    'title' => 'Progress dan XP',
-    'eyebrow' => 'PERKEMBANGAN BELAJAR',
-    'description' => 'Pantau progres penyelesaian misi, jumlah XP, level, dan perkembangan perjalanan belajarmu.',
-])
+    Route::get(
+    '/student/missions/{mission:slug}/pretest',
+    [PretestController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.pretest.show');
+
+    Route::post(
+    '/student/missions/{mission:slug}/pretest/start',
+    [PretestController::class, 'start']
+)
+    ->middleware('role:student')
+    ->name('student.missions.pretest.start');
+
+    Route::get(
+    '/student/missions/{mission:slug}/pretest/questions',
+    [PretestController::class, 'questions']
+)
+    ->middleware('role:student')
+    ->name('student.missions.pretest.questions');
+
+    Route::post(
+    '/student/missions/{mission:slug}/pretest/submit',
+    [PretestController::class, 'submit']
+)
+    ->middleware('role:student')
+    ->name('student.missions.pretest.submit');
+
+    Route::get(
+    '/student/missions/{mission:slug}/material',
+    [MaterialController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.material.show');
+
+    Route::get(
+    '/student/missions/{mission:slug}/micro-exercise',
+    [MicroExerciseController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.micro-exercise.show');
+
+    Route::post(
+    '/student/missions/{mission:slug}/micro-exercise/submit',
+    [MicroExerciseController::class, 'submit']
+)
+    ->middleware('role:student')
+    ->name('student.missions.micro-exercise.submit');
+
+    Route::get(
+    '/student/missions/{mission:slug}/quiz',
+    [QuizController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.quiz.show');
+
+    Route::post(
+    '/student/missions/{mission:slug}/quiz/submit',
+    [QuizController::class, 'submit']
+)
+    ->middleware('role:student')
+    ->name('student.missions.quiz.submit');
+
+    Route::get(
+    '/student/missions/{mission:slug}/final-challenge',
+    [FinalChallengeController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.final-challenge.show');
+
+    Route::post(
+    '/student/missions/{mission:slug}/final-challenge/submit',
+    [FinalChallengeController::class, 'submit']
+)
+    ->middleware('role:student')
+    ->name('student.missions.final-challenge.submit');
+
+    Route::post(
+    '/student/missions/{mission:slug}/material/blocks/{block}/open',
+    [MaterialProgressController::class, 'open']
+)
+    ->middleware('role:student')
+    ->name('student.missions.material.blocks.open');
+
+Route::post(
+    '/student/missions/{mission:slug}/material/blocks/{block}/heartbeat',
+    [MaterialProgressController::class, 'heartbeat']
+)
+    ->middleware('role:student')
+    ->name('student.missions.material.blocks.heartbeat');
+
+Route::get(
+    '/student/progress',
+    [ProgressController::class, 'index']
+)
     ->middleware('role:student')
     ->name('student.progress.index');
 
-Route::view('/student/badges', 'student.coming-soon', [
-    'title' => 'Koleksi Badge',
-    'eyebrow' => 'PENGHARGAAN',
-    'description' => 'Lihat badge yang telah diperoleh dari penyelesaian materi, kuis, tantangan, dan misi pembelajaran.',
-])
+Route::get(
+    '/student/badges',
+    [BadgeController::class, 'index']
+)
     ->middleware('role:student')
     ->name('student.badges.index');
 

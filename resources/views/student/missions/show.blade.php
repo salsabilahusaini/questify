@@ -54,8 +54,22 @@
                                 </p>
 
                                 <p class="mt-3 text-xs font-semibold uppercase">
-                                    {{ $step['status'] === 'available' ? 'Siap dimulai' : 'Terkunci' }}
-                                </p>
+    {{ match ($step['status']) {
+        'completed' => 'S elesai',
+        'available' => 'Siap dimulai',
+        default => 'Terkunci',
+    } }}
+</p>
+
+@if ($step['status'] === 'available' && ! empty($step['url']))
+    <a
+        href="{{ $step['url'] }}"
+        class="quest-button-primary mt-4 inline-flex"
+        wire:navigate
+    >
+        Buka {{ $step['title'] }}
+    </a>
+@endif
                             </div>
                         </div>
                     </article>
