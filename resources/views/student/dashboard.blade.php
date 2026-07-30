@@ -398,37 +398,63 @@
                         </div>
                     </div>
 
-                    <div class="mt-7 flex flex-col gap-3 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
-                        <div>
-                            <p class="text-sm font-bold text-neutral-900 dark:text-white">
-                                Status misi
-                            </p>
+                    <div
+    class="mt-7 flex flex-col gap-4 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center sm:justify-between"
+>
+    <div>
+        <p class="text-sm font-bold text-neutral-900 dark:text-white">
+            Status misi
+        </p>
 
-                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                                Misi akan dibuka setelah fitur pembelajaran
-                                dihubungkan.
-                            </p>
-                        </div>
+        @if ($activeMission === null)
+            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Belum ada misi pembelajaran aktif yang tersedia.
+            </p>
+        @elseif ($missionProgress >= 100)
+            <p class="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+                Selamat! Kamu telah menyelesaikan seluruh tahapan misi ini.
+            </p>
+        @elseif ($missionProgress > 0)
+            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Lanjutkan tahapan pembelajaran yang belum selesai.
+            </p>
+        @else
+            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Misi siap dimulai. Kerjakan setiap tahapan secara berurutan.
+            </p>
+        @endif
+    </div>
 
-                        <button
-                            type="button"
-                            disabled
-                            class="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white opacity-60"
-                        >
-                            <svg
-                                class="size-4"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path d="M7 10V7a5 5 0 0 1 10 0v3" />
-                                <rect x="4" y="10" width="16" height="11" rx="2" />
-                            </svg>
-
-                            Segera Tersedia
-                        </button>
-                    </div>
+    @if ($activeMission !== null)
+        <a
+            href="{{ route(
+                'student.missions.show',
+                ['mission' => $activeMission->slug]
+            ) }}"
+            class="quest-button-primary inline-flex items-center justify-center gap-2"
+            wire:navigate
+        >
+            @if ($missionProgress >= 100)
+                <span>✓</span>
+                Misi Selesai
+            @elseif ($missionProgress > 0)
+                <span>▶</span>
+                Lanjutkan Misi
+            @else
+                <span>▶</span>
+                Mulai Misi
+            @endif
+        </a>
+    @else
+        <button
+            type="button"
+            disabled
+            class="inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-neutral-300 px-5 py-3 text-sm font-semibold text-neutral-500"
+        >
+            Belum Tersedia
+        </button>
+    @endif
+</div>
                 </div>
             </article>
 
