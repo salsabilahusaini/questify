@@ -8,6 +8,22 @@
         $activeModuleCount = $activeModuleCount ?? 0;
         $readyStudentCount = $readyStudentCount ?? 0;
         $attentionStudentCount = $attentionStudentCount ?? 0;
+        $focusedMission = $focusedMission ?? null;
+
+$pretestCompletedCount =
+    $pretestCompletedCount ?? 0;
+
+$materialCompletedCount =
+    $materialCompletedCount ?? 0;
+
+$microExerciseCompletedCount =
+    $microExerciseCompletedCount ?? 0;
+
+$quizCompletedCount =
+    $quizCompletedCount ?? 0;
+
+$requiredMaterialBlockCount =
+    $requiredMaterialBlockCount ?? 0;
 
         $readinessPercentage = $studentCount > 0
             ? (int) round(($readyStudentCount / $studentCount) * 100)
@@ -339,6 +355,19 @@
                             rangkaian kegiatan prakelas sebelum pembelajaran
                             tatap muka.
                         </p>
+
+                        @if ($focusedMission)
+    <div
+        class="mt-3 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+    >
+        <span
+            class="h-2 w-2 rounded-full bg-blue-500"
+        ></span>
+
+        Misi dipantau:
+        {{ $focusedMission->title }}
+    </div>
+@endif
                     </div>
 
                     <div
@@ -376,54 +405,231 @@
                     </div>
                 </div>
 
-                <div class="mt-7 grid gap-3 sm:grid-cols-3">
-                    <div
-                        class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/70"
-                    >
-                        <p
-                            class="text-xs font-semibold uppercase tracking-wide text-neutral-400"
-                        >
-                            Pretest
-                        </p>
+                <div
+    class="mt-7 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+>
+    {{-- Penyelesaian Pretest --}}
+    <div
+        class="rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/40"
+    >
+        <div
+            class="flex items-start justify-between gap-3"
+        >
+            <div
+                class="flex size-9 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-neutral-900"
+            >
+                📝
+            </div>
 
-                        <p
-                            class="mt-2 text-sm font-bold text-neutral-900 dark:text-white"
-                        >
-                            Belum dihubungkan
-                        </p>
-                    </div>
+            @if (
+                $studentCount > 0
+                && $pretestCompletedCount === $studentCount
+            )
+                <span
+                    class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                >
+                    Lengkap
+                </span>
+            @else
+                <span
+                    class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                >
+                    Dipantau
+                </span>
+            @endif
+        </div>
 
-                    <div
-                        class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/70"
-                    >
-                        <p
-                            class="text-xs font-semibold uppercase tracking-wide text-neutral-400"
-                        >
-                            Materi Prakelas
-                        </p>
+        <p
+            class="mt-4 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300"
+        >
+            Pretest
+        </p>
 
-                        <p
-                            class="mt-2 text-sm font-bold text-neutral-900 dark:text-white"
-                        >
-                            Belum dihubungkan
-                        </p>
-                    </div>
+        <p
+            class="mt-2 text-xl font-bold text-neutral-950 dark:text-white"
+        >
+            {{ $pretestCompletedCount }}
+            <span
+                class="text-sm text-blue-600 dark:text-blue-300"
+            >
+                dari {{ $studentCount }}
+            </span>
+        </p>
 
-                    <div
-                        class="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900/70"
-                    >
-                        <p
-                            class="text-xs font-semibold uppercase tracking-wide text-neutral-400"
-                        >
-                            Kuis Materi
-                        </p>
+        <p
+            class="mt-2 text-xs leading-5 text-neutral-500 dark:text-neutral-400"
+        >
+            Peserta didik telah menyelesaikan asesmen awal.
+        </p>
+    </div>
 
-                        <p
-                            class="mt-2 text-sm font-bold text-neutral-900 dark:text-white"
-                        >
-                            Belum dihubungkan
-                        </p>
-                    </div>
+    {{-- Penyelesaian Materi Prakelas --}}
+    <div
+        class="rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/40"
+    >
+        <div
+            class="flex items-start justify-between gap-3"
+        >
+            <div
+                class="flex size-9 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-neutral-900"
+            >
+                📖
+            </div>
+
+            @if (
+                $studentCount > 0
+                && $materialCompletedCount === $studentCount
+            )
+                <span
+                    class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                >
+                    Lengkap
+                </span>
+            @else
+                <span
+                    class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                >
+                    Dipantau
+                </span>
+            @endif
+        </div>
+
+        <p
+            class="mt-4 text-xs font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-300"
+        >
+            Materi Prakelas
+        </p>
+
+        <p
+            class="mt-2 text-xl font-bold text-neutral-950 dark:text-white"
+        >
+            {{ $materialCompletedCount }}
+            <span
+                class="text-sm text-violet-600 dark:text-violet-300"
+            >
+                dari {{ $studentCount }}
+            </span>
+        </p>
+
+        <p
+            class="mt-2 text-xs leading-5 text-neutral-500 dark:text-neutral-400"
+        >
+            Seluruh {{ $requiredMaterialBlockCount }}
+            blok materi wajib telah diselesaikan.
+        </p>
+    </div>
+
+    {{-- Penyelesaian Latihan Mikro --}}
+    <div
+        class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40"
+    >
+        <div
+            class="flex items-start justify-between gap-3"
+        >
+            <div
+                class="flex size-9 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-neutral-900"
+            >
+                ⚡
+            </div>
+
+            @if (
+                $studentCount > 0
+                && $microExerciseCompletedCount
+                    === $studentCount
+            )
+                <span
+                    class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                >
+                    Lengkap
+                </span>
+            @else
+                <span
+                    class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                >
+                    Dipantau
+                </span>
+            @endif
+        </div>
+
+        <p
+            class="mt-4 text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-300"
+        >
+            Latihan Mikro
+        </p>
+
+        <p
+            class="mt-2 text-xl font-bold text-neutral-950 dark:text-white"
+        >
+            {{ $microExerciseCompletedCount }}
+            <span
+                class="text-sm text-emerald-600 dark:text-emerald-300"
+            >
+                dari {{ $studentCount }}
+            </span>
+        </p>
+
+        <p
+            class="mt-2 text-xs leading-5 text-neutral-500 dark:text-neutral-400"
+        >
+            Peserta didik telah menyelesaikan latihan penguatan.
+        </p>
+    </div>
+
+    {{-- Penyelesaian Kuis Materi --}}
+    <div
+        class="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40"
+    >
+        <div
+            class="flex items-start justify-between gap-3"
+        >
+            <div
+                class="flex size-9 items-center justify-center rounded-xl bg-white text-lg shadow-sm dark:bg-neutral-900"
+            >
+                ❓
+            </div>
+
+            @if (
+                $studentCount > 0
+                && $quizCompletedCount === $studentCount
+            )
+                <span
+                    class="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                >
+                    Lengkap
+                </span>
+            @else
+                <span
+                    class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                >
+                    Dipantau
+                </span>
+            @endif
+        </div>
+
+        <p
+            class="mt-4 text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-300"
+        >
+            Kuis Materi
+        </p>
+
+        <p
+            class="mt-2 text-xl font-bold text-neutral-950 dark:text-white"
+        >
+            {{ $quizCompletedCount }}
+            <span
+                class="text-sm text-amber-600 dark:text-amber-300"
+            >
+                dari {{ $studentCount }}
+            </span>
+        </p>
+
+        <p
+            class="mt-2 text-xs leading-5 text-neutral-500 dark:text-neutral-400"
+        >
+            Peserta didik telah menyelesaikan kuis prakelas.
+        </p>
+    </div>
+</div>
                 </div>
             </article>
 
@@ -757,11 +963,13 @@
                         latihan, dan penyelesaian misi.
                     </p>
 
-                    <span
-                        class="mt-5 inline-flex rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-600 dark:bg-violet-950 dark:text-violet-300"
-                    >
-                        Segera tersedia
-                    </span>
+                    <a
+    href="{{ route('teacher.monitoring.index') }}"
+    class="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-violet-700"
+>
+    Buka Monitoring
+    <span>→</span>
+</a>
                 </article>
 
                 <article class="quest-card p-5">

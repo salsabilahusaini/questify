@@ -103,60 +103,56 @@
                 </flux:sidebar.group>
 
             @elseif ($user->isTeacher())
-                <flux:sidebar.group
-                    :heading="__('Menu Guru')"
-                    class="grid"
-                >
-                    <flux:sidebar.item
-                        icon="home"
-                        :href="route('teacher.dashboard')"
-                        :current="request()->routeIs('teacher.dashboard')"
-                        wire:navigate
-                    >
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+    <flux:sidebar.group
+        :heading="__('Menu Guru')"
+        class="grid"
+    >
+        <flux:sidebar.item
+            icon="home"
+            :href="route('teacher.dashboard')"
+            :current="request()->routeIs('teacher.dashboard')"
+            wire:navigate
+        >
+            {{ __('Dashboard') }}
+        </flux:sidebar.item>
+    </flux:sidebar.group>
 
-                <flux:sidebar.group
-    :heading="__('Menu Belajar')"
-    class="grid"
+    <flux:sidebar.group
+        :heading="__('Menu Pembelajaran')"
+        class="grid"
+    >
+    <flux:sidebar.item
+    icon="book-open"
+    :href="route('teacher.missions.index')"
+    :current="request()->routeIs(
+        'teacher.missions.*'
+    )"
+    wire:navigate
 >
-    <flux:sidebar.item
-        icon="book-open-text"
-        :href="route('student.missions.index')"
-        :current="request()->routeIs('student.missions.*')"
-        wire:navigate
-    >
-        {{ __('Misi Pembelajaran') }}
-    </flux:sidebar.item>
+    {{ __('Misi Pembelajaran') }}
+</flux:sidebar.item>
+        <flux:sidebar.item
+            icon="users"
+            :href="route('teacher.monitoring.index')"
+            :current="request()->routeIs(
+                'teacher.monitoring.*'
+            )"
+            wire:navigate
+        >
+            {{ __('Monitoring Peserta Didik') }}
+        </flux:sidebar.item>
 
-    <flux:sidebar.item
-        icon="chart-bar"
-        :href="route('student.progress.index')"
-        :current="request()->routeIs('student.progress.*')"
-        wire:navigate
-    >
-        {{ __('Progress dan XP') }}
-    </flux:sidebar.item>
-
-    <flux:sidebar.item
-        icon="trophy"
-        :href="route('student.badges.index')"
-        :current="request()->routeIs('student.badges.*')"
-        wire:navigate
-    >
-        {{ __('Badge') }}
-    </flux:sidebar.item>
-
-    <flux:sidebar.item
-        icon="folder-open"
-        :href="route('student.portfolio.index')"
-        :current="request()->routeIs('student.portfolio.*')"
-        wire:navigate
-    >
-        {{ __('E-Portfolio') }}
-    </flux:sidebar.item>
-</flux:sidebar.group>
+        <flux:sidebar.item
+            icon="chart-bar"
+            :href="route('teacher.results.index')"
+            :current="request()->routeIs(
+                'teacher.results.*'
+            )"
+            wire:navigate
+        >
+            {{ __('Hasil Pembelajaran') }}
+        </flux:sidebar.item>
+    </flux:sidebar.group>
 
             @elseif ($user->isStudent())
                 <flux:sidebar.group
