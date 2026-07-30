@@ -10,18 +10,54 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Pengguna yang belum login diarahkan
+     * menuju halaman login.
+     */
     public function test_guests_are_redirected_to_the_login_page(): void
     {
-        $response = $this->get(route('dashboard'));
-        $response->assertRedirect(route('login'));
+        $response = $this->get(
+            route('student.dashboard')
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard(): void
+    /**
+     * Peserta didik dapat membuka dashboard peserta didik.
+     */
+    public function test_authenticated_students_can_visit_the_student_dashboard(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $student = User::factory()->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
 
-        $response = $this->get(route('dashboard'));
+        $response = $this
+            ->actingAs($student)
+            ->get(
+                route('student.dashboard')
+            );
+
+        $response->assertOk();
+    }
+
+    /**
+     * Guru dapat membuka dashboard guru.
+     */
+    public function test_authenticated_teachers_can_visit_the_teacher_dashboard(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => User::ROLE_TEACHER,
+        ]);
+
+        $response = $this
+            ->actingAs($teacher)
+            ->get(
+                route('teacher.dashboard')
+            );
+
         $response->assertOk();
     }
 }
