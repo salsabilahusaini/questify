@@ -7,6 +7,7 @@ use App\Models\FinalChallengeAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
 use App\Models\QuizAttempt;
+use App\Services\BadgeAwardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +72,8 @@ class FinalChallengeController extends Controller
  */
 public function submit(
     Request $request,
-    Mission $mission
+    Mission $mission,
+    BadgeAwardService $badgeAwardService
 ): RedirectResponse {
     abort_unless($mission->is_published, 404);
 
@@ -299,14 +301,15 @@ public function submit(
     };
 
     DB::transaction(function () use (
-        $request,
-        $mission,
-        $challenge,
-        $validated,
-        $score,
-        $earnedPoints,
-        $feedback
-    ): void {
+    $request,
+    $mission,
+    $challenge,
+    $validated,
+    $score,
+    $earnedPoints,
+    $feedback,
+    $badgeAwardService
+): void {
         $attempt = FinalChallengeAttempt::firstOrCreate(
             [
                 'user_id' => $request->user()->id,
@@ -335,16 +338,20 @@ public function submit(
             'earned_points' => $earnedPoints,
             'feedback' => $feedback,
         ]);
-        MissionCompletion::firstOrCreate(
-    [
-        'user_id' => $request->user()->id,
-        'mission_id' => $mission->id,
-    ],
-    [
-        'earned_xp' => $mission->xp_reward,
-        'completed_at' => now(),
-    ]
-);
+               MissionCompletion::firstOrCreate(
+            [
+                'user_id' => $request->user()->id,
+                'mission_id' => $mission->id,
+            ],
+            [
+                'earned_xp' => $mission->xp_reward,
+                'completed_at' => now(),
+            ]
+        );
+
+        $badgeAwardService->awardEligibleBadges(
+            $request->user()
+        );
     });
 
     return redirect()
