@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\FinalChallengeAttempt;
 use App\Models\Mission;
+use App\Models\MissionCompletion;
+use App\Services\BadgeAwardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -237,9 +239,10 @@ class PosttestController extends Controller
      * Menyimpan jawaban dan menyelesaikan Posttest siswa.
      */
     public function submit(
-        Request $request,
-        Mission $mission
-    ): RedirectResponse {
+    Request $request,
+    Mission $mission,
+    BadgeAwardService $badgeAwardService
+): RedirectResponse {
         abort_unless($mission->is_published, 404);
 
         $finalChallengeCompleted =
@@ -343,10 +346,13 @@ class PosttestController extends Controller
         }
 
         DB::transaction(function () use (
-            $attempt,
-            $questions,
-            $validated
-        ): void {
+    $request,
+    $mission,
+    $attempt,
+    $questions,
+    $validated,
+    $badgeAwardService
+): void {
             $correctAnswers = 0;
 
             foreach ($questions as $question) {
@@ -404,6 +410,20 @@ class PosttestController extends Controller
                 'correct_answers' => $correctAnswers,
                 'score' => $score,
             ]);
+            MissionCompletion::firstOrCreate(
+    [
+        'user_id' => $request->user()->id,
+        'mission_id' => $mission->id,
+    ],
+    [
+        'earned_xp' => $mission->xp_reward,
+        'completed_at' => now(),
+    ]
+);
+
+$badgeAwardService->awardEligibleBadges(
+    $request->user()
+);
         });
 
         return redirect()
