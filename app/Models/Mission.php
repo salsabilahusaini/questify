@@ -38,6 +38,22 @@ public function pretestAttempts(): HasMany
     return $this->hasMany(PretestAttempt::class);
 }
 /**
+ * Mendapatkan seluruh soal Posttest pada misi.
+ */
+public function posttestQuestions(): HasMany
+{
+    return $this->hasMany(PosttestQuestion::class)
+        ->orderBy('sequence');
+}
+
+/**
+ * Mendapatkan seluruh pengerjaan Posttest pada misi.
+ */
+public function posttestAttempts(): HasMany
+{
+    return $this->hasMany(PosttestAttempt::class);
+}
+/**
  * Mendapatkan seluruh bagian materi pada misi.
  */
 public function materialSections(): HasMany
