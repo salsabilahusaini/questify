@@ -24,6 +24,12 @@
 
         $isReady = $isReady ?? false;
 
+        $posttestAttempt =
+    $posttestAttempt ?? null;
+
+$learningGain =
+    $learningGain ?? null;
+
         $formatDuration = function (int $seconds): string {
             if ($seconds <= 0) {
                 return '0 detik';
@@ -325,7 +331,7 @@
                 pembelajaran.
             </p>
 
-            <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {{-- Pretest --}}
                 <article
                     class="rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-950/40"
@@ -628,6 +634,144 @@
                         </p>
                     @endif
                 </article>
+
+                {{-- Posttest --}}
+<article
+    class="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 dark:border-cyan-800 dark:bg-cyan-950/40"
+>
+    <div
+        class="flex items-center justify-between gap-3"
+    >
+        <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl shadow-sm dark:bg-neutral-900"
+        >
+            📊
+        </div>
+
+        @if ($posttestAttempt)
+            <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+            >
+                Selesai
+            </span>
+        @else
+            <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+            >
+                Belum
+            </span>
+        @endif
+    </div>
+
+    <p
+        class="mt-4 text-xs font-semibold uppercase tracking-wider text-cyan-600"
+    >
+        Posttest
+    </p>
+
+    @if ($posttestAttempt)
+        <p
+            class="mt-2 text-3xl font-bold text-neutral-950 dark:text-white"
+        >
+            {{ number_format(
+                (float) $posttestAttempt->score,
+                0,
+                ',',
+                '.'
+            ) }}
+
+            <span class="text-base text-cyan-600">
+                / 100
+            </span>
+        </p>
+
+        <p
+            class="mt-2 text-sm text-neutral-600 dark:text-neutral-300"
+        >
+            {{ $posttestAttempt->correct_answers }}
+            benar dari
+            {{ $posttestAttempt->total_questions }}
+            soal
+        </p>
+    @else
+        <p
+            class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
+        >
+            Belum ada hasil Posttest.
+        </p>
+    @endif
+</article>
+
+{{-- Peningkatan Nilai --}}
+<article
+    class="rounded-2xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-800 dark:bg-rose-950/40"
+>
+    <div
+        class="flex items-center justify-between gap-3"
+    >
+        <div
+            class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl shadow-sm dark:bg-neutral-900"
+        >
+            📈
+        </div>
+
+        @if ($learningGain !== null)
+            <span
+                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+            >
+                Tersedia
+            </span>
+        @else
+            <span
+                class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+            >
+                Belum
+            </span>
+        @endif
+    </div>
+
+    <p
+        class="mt-4 text-xs font-semibold uppercase tracking-wider text-rose-600"
+    >
+        Peningkatan Nilai
+    </p>
+
+    @if ($learningGain !== null)
+        <p
+            class="mt-2 text-3xl font-bold
+                {{ $learningGain >= 0
+                    ? 'text-emerald-600'
+                    : 'text-rose-600' }}"
+        >
+            {{ $learningGain > 0 ? '+' : '' }}
+
+            {{ number_format(
+                $learningGain,
+                0,
+                ',',
+                '.'
+            ) }}
+
+            <span class="text-base">
+                poin
+            </span>
+        </p>
+
+        <p
+            class="mt-2 text-sm text-neutral-600 dark:text-neutral-300"
+        >
+            Selisih nilai Posttest terhadap Pretest.
+        </p>
+    @else
+        <p
+            class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
+        >
+            Belum dapat dihitung karena hasil Pretest
+            atau Posttest belum tersedia.
+        </p>
+    @endif
+</article>
+
             </div>
         </section>
 

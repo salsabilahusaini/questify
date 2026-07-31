@@ -10,6 +10,7 @@ use App\Models\MicroExerciseAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
 use App\Models\PretestAttempt;
+use App\Models\PosttestAttempt;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use App\Models\UserBadge;
@@ -478,10 +479,11 @@ class StudentMonitoringController extends Controller
         $materialProgresses = collect();
 
         $pretestAttempt = null;
-        $microExerciseAttempt = null;
-        $quizAttempt = null;
-        $finalChallengeAttempt = null;
-        $missionCompletion = null;
+$microExerciseAttempt = null;
+$quizAttempt = null;
+$finalChallengeAttempt = null;
+$posttestAttempt = null;
+$missionCompletion = null;
 
         if ($focusedMission !== null) {
             /*
@@ -599,6 +601,19 @@ class StudentMonitoringController extends Controller
                     ->latest('completed_at')
                     ->first();
 
+                    /*
+ * Mengambil hasil Posttest terbaru.
+ */
+$posttestAttempt = PosttestAttempt::query()
+    ->where('user_id', $student->id)
+    ->where(
+        'mission_id',
+        $focusedMission->id
+    )
+    ->whereNotNull('completed_at')
+    ->latest('completed_at')
+    ->first();
+
             /*
              * Mengambil catatan penyelesaian misi.
              */
@@ -649,6 +664,19 @@ class StudentMonitoringController extends Controller
             && $microExerciseAttempt !== null
             && $quizAttempt !== null;
 
+            /*
+ * Menghitung perubahan nilai dari Pretest ke Posttest.
+ */
+$learningGain =
+    $pretestAttempt !== null
+    && $posttestAttempt !== null
+        ? round(
+            (float) $posttestAttempt->score
+            - (float) $pretestAttempt->score,
+            2
+        )
+        : null;
+
         /*
          * Mengambil aktivitas terakhir dari seluruh tahap.
          */
@@ -658,6 +686,7 @@ class StudentMonitoringController extends Controller
             $microExerciseAttempt?->completed_at,
             $quizAttempt?->completed_at,
             $finalChallengeAttempt?->completed_at,
+            $posttestAttempt?->completed_at,
             $missionCompletion?->completed_at,
         ])
             ->filter()
@@ -710,6 +739,11 @@ class StudentMonitoringController extends Controller
             'quizAttempt' => $quizAttempt,
             'finalChallengeAttempt' =>
                 $finalChallengeAttempt,
+                'posttestAttempt' =>
+    $posttestAttempt,
+
+'learningGain' =>
+    $learningGain,
             'missionCompletion' =>
                 $missionCompletion,
             'isReady' => $isReady,
