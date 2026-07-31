@@ -23,6 +23,12 @@
         $averageFinalChallengeScore =
             $averageFinalChallengeScore ?? 0;
 
+            $averagePosttestScore =
+    $averagePosttestScore ?? 0;
+
+$averageLearningGain =
+    $averageLearningGain ?? 0;
+
         $overallAverageScore =
             $overallAverageScore ?? 0;
 
@@ -68,8 +74,8 @@
                             class="mt-2 max-w-3xl text-sm leading-6 text-neutral-600 dark:text-neutral-300"
                         >
                             Rekap nilai Pretest, Latihan Mikro,
-                            Kuis Materi, Final Challenge, XP,
-                            serta penyelesaian misi peserta didik.
+Kuis Materi, Final Challenge, Posttest,
+XP, serta penyelesaian misi peserta didik.
                         </p>
                     </div>
 
@@ -245,7 +251,7 @@
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
                         Persentase peserta didik yang telah memiliki
-                        nilai pada keempat aktivitas.
+                        nilai pada kelima aktivitas.
                     </p>
                 </div>
 
@@ -304,8 +310,8 @@
             </p>
 
             <div
-                class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-            >
+    class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+>
                 <article
                     class="rounded-2xl border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-950/40"
                 >
@@ -429,6 +435,70 @@
                         </span>
                     </p>
                 </article>
+
+                <article
+    class="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 dark:border-cyan-800 dark:bg-cyan-950/40"
+>
+    <div
+        class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl shadow-sm dark:bg-neutral-900"
+    >
+        📊
+    </div>
+
+    <p
+        class="mt-4 text-xs font-semibold uppercase tracking-wider text-cyan-600"
+    >
+        Posttest
+    </p>
+
+    <p
+        class="mt-2 text-3xl font-bold text-neutral-950 dark:text-white"
+    >
+        {{ number_format(
+            $averagePosttestScore,
+            0,
+            ',',
+            '.'
+        ) }}
+
+        <span class="text-base text-cyan-600">
+            / 100
+        </span>
+    </p>
+</article>
+
+<article
+    class="rounded-2xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-800 dark:bg-rose-950/40"
+>
+    <div
+        class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl shadow-sm dark:bg-neutral-900"
+    >
+        📈
+    </div>
+
+    <p
+        class="mt-4 text-xs font-semibold uppercase tracking-wider text-rose-600"
+    >
+        Peningkatan Nilai
+    </p>
+
+    <p
+        class="mt-2 text-3xl font-bold text-neutral-950 dark:text-white"
+    >
+        {{ $averageLearningGain > 0 ? '+' : '' }}
+
+        {{ number_format(
+            $averageLearningGain,
+            0,
+            ',',
+            '.'
+        ) }}
+
+        <span class="text-base text-rose-600">
+            poin
+        </span>
+    </p>
+</article>
             </div>
         </section>
 
@@ -522,7 +592,7 @@
                                             class="mt-2 text-xs text-neutral-400 dark:text-neutral-500"
                                         >
                                             {{ $row['completed_activity_count'] }}
-                                            dari 4 aktivitas memiliki nilai
+                                            dari 5 aktivitas memiliki nilai
                                         </p>
                                     </div>
                                 </div>
@@ -560,7 +630,7 @@
                             </div>
 
                             <div
-                                class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-5"
+                                class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3"
                             >
                                 @php
                                     $scores = [
@@ -588,6 +658,12 @@
                                                     'final_challenge_score'
                                                 ],
                                         ],
+
+                                        [
+    'label' => 'Posttest',
+    'score' =>
+        $row['posttest_score'],
+],
                                     ];
                                 @endphp
 
@@ -671,7 +747,7 @@
                             </div>
 
                             <div
-                                class="grid gap-3 border-t border-neutral-200 bg-neutral-50 p-5 sm:grid-cols-2 dark:border-neutral-700 dark:bg-neutral-900"
+                                class="grid gap-3 border-t border-neutral-200 bg-neutral-50 p-5 sm:grid-cols-3 dark:border-neutral-700 dark:bg-neutral-900"
                             >
                                 <div>
                                     <p
@@ -706,6 +782,36 @@
                                         {{ $row['completed_missions'] }}
                                     </p>
                                 </div>
+
+                                <div>
+    <p
+        class="text-xs font-semibold uppercase tracking-wide text-neutral-400"
+    >
+        Peningkatan Nilai
+    </p>
+
+    @if ($row['learning_gain'] !== null)
+        <p
+            class="mt-2 font-bold {{ $row['learning_gain'] >= 0
+                ? 'text-emerald-600'
+                : 'text-rose-600' }}"
+        >
+            {{ $row['learning_gain'] > 0 ? '+' : '' }}
+
+            {{ number_format(
+                $row['learning_gain'],
+                0,
+                ',',
+                '.'
+            ) }}
+            poin
+        </p>
+    @else
+        <p class="mt-2 font-semibold text-amber-600">
+            Belum tersedia
+        </p>
+    @endif
+</div>
                             </div>
                         </article>
                     @endforeach

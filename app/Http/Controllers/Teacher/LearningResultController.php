@@ -8,6 +8,7 @@ use App\Models\MicroExerciseAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
 use App\Models\PretestAttempt;
+use App\Models\PosttestAttempt;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -57,6 +58,7 @@ class LearningResultController extends Controller
         $microExerciseAttempts = collect();
         $quizAttempts = collect();
         $finalChallengeAttempts = collect();
+        $posttestAttempts = collect();
 
         if (
             $focusedMission !== null
@@ -146,6 +148,25 @@ class LearningResultController extends Controller
                         fn ($attempts) =>
                             $attempts->first()
                     );
+
+                    /*
+ * Mengambil hasil Posttest terbaru
+ * yang telah diselesaikan.
+ */
+$posttestAttempts = PosttestAttempt::query()
+    ->where(
+        'mission_id',
+        $focusedMission->id
+    )
+    ->whereIn('user_id', $studentIds)
+    ->whereNotNull('completed_at')
+    ->latest('completed_at')
+    ->get()
+    ->groupBy('user_id')
+    ->map(
+        fn ($attempts) =>
+            $attempts->first()
+    );
         }
 
         /*
@@ -177,12 +198,13 @@ class LearningResultController extends Controller
          */
         $learningResultRows = $students->map(
             function ($student) use (
-                $pretestAttempts,
-                $microExerciseAttempts,
-                $quizAttempts,
-                $finalChallengeAttempts,
-                $missionStatistics
-            ): array {
+    $pretestAttempts,
+    $microExerciseAttempts,
+    $quizAttempts,
+    $finalChallengeAttempts,
+    $posttestAttempts,
+    $missionStatistics
+): array {
                 $pretestAttempt =
                     $pretestAttempts->get($student->id);
 
@@ -198,6 +220,11 @@ class LearningResultController extends Controller
                     $finalChallengeAttempts->get(
                         $student->id
                     );
+
+                    $posttestAttempt =
+    $posttestAttempts->get(
+        $student->id
+    );
 
                 $missionStatistic =
                     $missionStatistics->get($student->id);
@@ -218,19 +245,34 @@ class LearningResultController extends Controller
                     $finalChallengeAttempt !== null
                         ? (float) $finalChallengeAttempt->score
                         : null,
+
+                        $posttestAttempt !== null
+    ? (float) $posttestAttempt->score
+    : null,
                 ])->filter(
                     fn ($score) => $score !== null
                 );
 
                 $isComplete =
-                    $pretestAttempt !== null
-                    && $microExerciseAttempt !== null
-                    && $quizAttempt !== null
-                    && $finalChallengeAttempt !== null;
+    $pretestAttempt !== null
+    && $microExerciseAttempt !== null
+    && $quizAttempt !== null
+    && $finalChallengeAttempt !== null
+    && $posttestAttempt !== null;
 
                 $averageScore = $scores->isNotEmpty()
                     ? round((float) $scores->average(), 2)
                     : null;
+
+                    $learningGain =
+    $pretestAttempt !== null
+    && $posttestAttempt !== null
+        ? round(
+            (float) $posttestAttempt->score
+            - (float) $pretestAttempt->score,
+            2
+        )
+        : null;
 
                 return [
                     'student' => $student,
@@ -246,6 +288,9 @@ class LearningResultController extends Controller
 
                     'final_challenge_attempt' =>
                         $finalChallengeAttempt,
+
+                        'posttest_attempt' =>
+    $posttestAttempt,
 
                     'pretest_score' =>
                         $pretestAttempt !== null
@@ -267,7 +312,13 @@ class LearningResultController extends Controller
                             ? (float) $finalChallengeAttempt->score
                             : null,
 
+                            'posttest_score' =>
+    $posttestAttempt !== null
+        ? (float) $posttestAttempt->score
+        : null,
+
                     'average_score' => $averageScore,
+                    'learning_gain' => $learningGain,
 
                     'completed_activity_count' =>
                         $scores->count(),
@@ -324,6 +375,16 @@ class LearningResultController extends Controller
                 'final_challenge_score'
             );
 
+            $averagePosttestScore = $this->averageScore(
+    $learningResultRows,
+    'posttest_score'
+);
+
+$averageLearningGain = $this->averageScore(
+    $learningResultRows,
+    'learning_gain'
+);
+
         /*
          * Rata-rata keseluruhan dihitung berdasarkan
          * rata-rata siswa yang sudah memiliki nilai.
@@ -361,6 +422,12 @@ class LearningResultController extends Controller
 
             'averageFinalChallengeScore' =>
                 $averageFinalChallengeScore,
+
+                'averagePosttestScore' =>
+    $averagePosttestScore,
+
+'averageLearningGain' =>
+    $averageLearningGain,
 
             'overallAverageScore' =>
                 $overallAverageScore,
