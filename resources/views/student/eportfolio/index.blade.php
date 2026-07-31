@@ -37,10 +37,8 @@
              * Mencegah kartu terpotong di antara dua halaman.
              */
             .portfolio-print-page article {
-                break-inside: avoid;
-                page-break-inside: avoid;
-                box-shadow: none !important;
-            }
+    box-shadow: none !important;
+}
 
             /*
              * Empat bagian awal dibuat tetap utuh:
@@ -161,10 +159,56 @@
                 height: 38px !important;
             }
 
-            .portfolio-print-page .h-12,
+                        .portfolio-print-page .h-12,
             .portfolio-print-page .w-12 {
                 width: 34px !important;
                 height: 34px !important;
+            }
+
+            /*
+             * Bagian Bukti Hasil Belajar selalu dimulai
+             * dari halaman baru saat dicetak.
+             */
+            .portfolio-print-results-section {
+                display: block !important;
+                break-before: page !important;
+                page-break-before: always !important;
+                overflow: visible !important;
+            }
+
+            /*
+             * Satu kelompok hasil misi tidak boleh
+             * dipotong di tengah halaman.
+             */
+            .portfolio-print-results-section article {
+                display: block !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                overflow: visible !important;
+            }
+
+            /*
+             * Empat kartu nilai disusun menjadi dua kolom.
+             */
+            .portfolio-print-results {
+                display: grid !important;
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                align-items: stretch !important;
+                overflow: visible !important;
+            }
+
+            /*
+             * Setiap kartu nilai tidak boleh terpotong.
+             */
+            .portfolio-print-results > * {
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                margin: 0 !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
             }
         }
     </style>
@@ -591,8 +635,9 @@
             @endif
         </section>
 
-                {{-- Bukti hasil belajar --}}
-        <section class="quest-card p-6">
+{{-- Bukti hasil belajar --}}
+
+<section class="quest-card p-6 portfolio-print-results-section">
             <p
                 class="text-xs font-semibold uppercase tracking-wider text-emerald-600"
             >
