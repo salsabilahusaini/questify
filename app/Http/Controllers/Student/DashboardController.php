@@ -60,6 +60,7 @@ class DashboardController extends Controller
         $microPracticeCompleted = false;
         $quizCompleted = false;
         $finalChallengeCompleted = false;
+        $posttestCompleted = false;
 
         if ($activeMission !== null) {
             /*
@@ -156,20 +157,34 @@ class DashboardController extends Controller
                     )
                     ->exists();
 
+                    /*
+ * Memeriksa penyelesaian Posttest.
+ */
+$posttestCompleted = $activeMission
+    ->posttestAttempts()
+    ->where('user_id', $user->id)
+    ->where('status', 'completed')
+    ->exists();
+
             /*
              * Progres misi dihitung dari lima tahap:
              * Pretest, Materi, Latihan Mikro, Kuis,
              * dan Final Challenge.
              */
             $completedStepCount = count(
-                array_filter([
-                    $pretestCompleted,
-                    $materialCompleted,
-                    $microPracticeCompleted,
-                    $quizCompleted,
-                    $finalChallengeCompleted,
-                ])
-            );
+    array_filter([
+        $pretestCompleted,
+        $materialCompleted,
+        $microPracticeCompleted,
+        $quizCompleted,
+        $finalChallengeCompleted,
+        $posttestCompleted,
+    ])
+);
+
+$missionProgress = (int) round(
+    ($completedStepCount / 6) * 100
+);
 
             $missionProgress = (int) round(
                 ($completedStepCount / 5) * 100
@@ -189,6 +204,7 @@ class DashboardController extends Controller
             'microPracticeCompleted' =>
                 $microPracticeCompleted,
             'quizCompleted' => $quizCompleted,
+            'posttestCompleted' => $posttestCompleted,
         ]);
     }
 }

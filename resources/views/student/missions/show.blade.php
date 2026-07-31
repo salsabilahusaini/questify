@@ -55,7 +55,7 @@
 
                                 <p class="mt-3 text-xs font-semibold uppercase">
     {{ match ($step['status']) {
-        'completed' => 'S elesai',
+        'completed' => 'Selesai',
         'available' => 'Siap dimulai',
         default => 'Terkunci',
     } }}
