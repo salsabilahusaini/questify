@@ -7,8 +7,8 @@ use App\Models\Badge;
 use App\Models\FinalChallengeAttempt;
 use App\Models\MissionCompletion;
 use App\Models\UserBadge;
+use App\Services\BadgeAwardService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BadgeController extends Controller
@@ -17,9 +17,13 @@ class BadgeController extends Controller
      * Menampilkan koleksi badge dan memberikan badge
      * yang kriterianya telah dipenuhi siswa.
      */
-    public function index(Request $request): View
+    public function index(
+    Request $request,
+    BadgeAwardService $badgeAwardService
+): View
     {
         $user = $request->user();
+        $badgeAwardService->awardEligibleBadges($user);
 
         $completedMissionCount = MissionCompletion::query()
             ->where('user_id', $user->id)
@@ -43,44 +47,6 @@ class BadgeController extends Controller
             ->where('is_active', true)
             ->orderBy('sequence')
             ->get();
-
-        DB::transaction(function () use (
-            $user,
-            $badges,
-            $completedMissionCount,
-            $totalXp,
-            $highestChallengeScore
-        ): void {
-            foreach ($badges as $badge) {
-                $isEligible = match ($badge->criteria_type) {
-                    Badge::CRITERIA_MISSIONS_COMPLETED =>
-                        $completedMissionCount
-                            >= $badge->criteria_value,
-
-                    Badge::CRITERIA_TOTAL_XP =>
-                        $totalXp
-                            >= $badge->criteria_value,
-
-                    Badge::CRITERIA_PERFECT_CHALLENGE =>
-                        $highestChallengeScore
-                            >= $badge->criteria_value,
-
-                    default => false,
-                };
-
-                if ($isEligible) {
-                    UserBadge::firstOrCreate(
-                        [
-                            'user_id' => $user->id,
-                            'badge_id' => $badge->id,
-                        ],
-                        [
-                            'awarded_at' => now(),
-                        ]
-                    );
-                }
-            }
-        });
 
         $ownedBadgeIds = UserBadge::query()
             ->where('user_id', $user->id)
