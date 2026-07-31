@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Student\PretestController;
+use App\Http\Controllers\Student\PosttestController;
 use App\Http\Controllers\Student\MaterialController;
 use App\Http\Controllers\Student\MaterialProgressController;
 use App\Http\Controllers\Student\MicroExerciseController;
@@ -281,6 +282,34 @@ Route::put(
 )
     ->middleware('role:student')
     ->name('student.missions.pretest.submit');
+
+    Route::get(
+    '/student/missions/{mission:slug}/posttest',
+    [PosttestController::class, 'show']
+)
+    ->middleware('role:student')
+    ->name('student.missions.posttest.show');
+
+Route::post(
+    '/student/missions/{mission:slug}/posttest/start',
+    [PosttestController::class, 'start']
+)
+    ->middleware('role:student')
+    ->name('student.missions.posttest.start');
+
+Route::get(
+    '/student/missions/{mission:slug}/posttest/questions',
+    [PosttestController::class, 'questions']
+)
+    ->middleware('role:student')
+    ->name('student.missions.posttest.questions');
+
+Route::post(
+    '/student/missions/{mission:slug}/posttest/submit',
+    [PosttestController::class, 'submit']
+)
+    ->middleware('role:student')
+    ->name('student.missions.posttest.submit');
 
     Route::get(
     '/student/missions/{mission:slug}/material',
