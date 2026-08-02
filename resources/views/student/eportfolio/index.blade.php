@@ -38,6 +38,38 @@
              */
             .portfolio-print-page article {
     box-shadow: none !important;
+
+    /*
+ * Memulai seluruh bagian Badge pada halaman baru.
+ * Break diterapkan pada pembungkus yang memiliki isi
+ * agar tidak diabaikan oleh browser.
+ */
+.portfolio-print-badges-page {
+    display: block !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.portfolio-print-badges-section {
+    display: block !important;
+    overflow: visible !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
+
+.portfolio-print-badges {
+    display: grid !important;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+}
+
+.portfolio-print-badges article {
+    min-width: 0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
 }
 
             /*
@@ -170,11 +202,13 @@
              * dari halaman baru saat dicetak.
              */
             .portfolio-print-results-section {
-                display: block !important;
-                break-before: page !important;
-                page-break-before: always !important;
-                overflow: visible !important;
-            }
+    display: block !important;
+    break-before: page !important;
+    page-break-before: always !important;
+    break-after: page !important;
+    page-break-after: always !important;
+    overflow: visible !important;
+}
 
             /*
              * Satu kelompok hasil misi tidak boleh
@@ -1314,11 +1348,12 @@ nilai pada setiap misi yang telah diselesaikan.
             @endif
         </section>
 
-        {{-- Badge yang diperoleh --}}
-        <section class="quest-card p-6">
-            <p
-                class="text-xs font-semibold uppercase tracking-wider text-violet-600"
-            >
+
+<div class="portfolio-print-badges-page">
+    {{-- Badge yang diperoleh --}}
+    <section
+        class="quest-card p-6 portfolio-print-badges-section"
+    >
                 Penghargaan Pembelajaran
             </p>
 
@@ -1414,5 +1449,6 @@ nilai pada setiap misi yang telah diselesaikan.
                 </div>
             @endif
         </section>
+</div>
     </div>
 </x-layouts::app>
