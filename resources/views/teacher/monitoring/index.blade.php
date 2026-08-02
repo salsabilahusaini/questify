@@ -331,7 +331,6 @@
         Lihat Detail
         <span>→</span>
     </a>
-</div>
 
 </div>
                             </div>
