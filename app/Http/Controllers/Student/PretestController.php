@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mission;
+use App\Models\PretestAttempt;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -61,11 +62,11 @@ public function start(Request $request, Mission $mission): RedirectResponse
             'user_id' => $request->user()->id,
         ],
         [
-            'status' => 'in_progress',
-            'started_at' => now(),
-            'total_questions' => $questionCount,
-            'correct_answers' => 0,
-        ]
+    'status' => PretestAttempt::STATUS_IN_PROGRESS,
+    'started_at' => now(),
+    'total_questions' => $questionCount,
+    'correct_answers' => 0,
+]
     );
 
     return redirect()->route(
@@ -97,8 +98,11 @@ public function questions(
                 'Mulai Pretest terlebih dahulu.'
             );
     }
+ if (
+    $attempt->status
+    === PretestAttempt::STATUS_COMPLETED
+) {
 
-    if ($attempt->status === 'completed') {
         return redirect()->route(
             'student.missions.pretest.show',
             ['mission' => $mission->slug]
@@ -106,14 +110,15 @@ public function questions(
     }
 
     $questions = $mission->pretestQuestions()
-        ->where('is_active', true)
-        ->select([
-            'id',
-            'mission_id',
-            'question_text',
-            'sequence',
-        ])
-        ->with([
+    ->where('is_active', true)
+    ->select([
+        'id',
+        'mission_id',
+        'question_text',
+        'sequence',
+    ])
+    ->orderBy('sequence')
+    ->with([
             'options' => function ($query) {
                 $query
                     ->select([
@@ -164,7 +169,10 @@ public function submit(
             );
     }
 
-    if ($attempt->status === 'completed') {
+    if (
+    $attempt->status
+    === PretestAttempt::STATUS_COMPLETED
+) {
         return redirect()->route(
             'student.missions.pretest.show',
             ['mission' => $mission->slug]
@@ -185,9 +193,10 @@ public function submit(
     );
 
     $questions = $mission->pretestQuestions()
-        ->where('is_active', true)
-        ->with('options')
-        ->get();
+    ->where('is_active', true)
+    ->with('options')
+    ->orderBy('sequence')
+    ->get();
 
     abort_if(
         $questions->isEmpty(),
@@ -247,12 +256,12 @@ public function submit(
         );
 
         $attempt->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-            'total_questions' => $totalQuestions,
-            'correct_answers' => $correctAnswers,
-            'score' => $score,
-        ]);
+    'status' => PretestAttempt::STATUS_COMPLETED,
+    'completed_at' => now(),
+    'total_questions' => $totalQuestions,
+    'correct_answers' => $correctAnswers,
+    'score' => $score,
+]);
     });
 
     return redirect()->route(
