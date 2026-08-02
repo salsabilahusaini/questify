@@ -610,12 +610,13 @@
                                 class="mt-5 flex flex-wrap gap-2"
                             >
                                 @foreach ([
-                                    'Pretest',
-                                    'Materi Prakelas',
-                                    'Latihan Mikro',
-                                    'Kuis Materi',
-                                    'Final Challenge',
-                                ] as $stage)
+    'Pretest',
+    'Materi Prakelas',
+    'Latihan Mikro',
+    'Kuis Materi',
+    'Final Challenge',
+    'Posttest',
+] as $stage)
                                     <span
                                         class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                     >
@@ -654,8 +655,8 @@
                 class="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-300"
             >
                 Bagian ini menampilkan hasil Pretest, Latihan Mikro,
-                Kuis Materi, dan Final Challenge pada setiap misi yang
-                telah diselesaikan.
+Kuis Materi, Final Challenge, Posttest, serta peningkatan
+nilai pada setiap misi yang telah diselesaikan.
             </p>
 
             @if ($completions->isEmpty())
@@ -679,20 +680,37 @@
                 <div class="mt-6 space-y-6">
                     @foreach ($completions as $completion)
                         @php
-                            $missionId = $completion->mission_id;
+    $missionId = $completion->mission_id;
 
-                            $pretestAttempt =
-                                $pretestAttempts->get($missionId);
+    $pretestAttempt =
+        $pretestAttempts->get($missionId);
 
-                            $microExerciseAttempt =
-                                $microExerciseAttempts->get($missionId);
+    $posttestAttempt =
+        $posttestAttempts->get($missionId);
 
-                            $quizAttempt =
-                                $quizAttempts->get($missionId);
+    $microExerciseAttempt =
+        $microExerciseAttempts->get($missionId);
 
-                            $finalChallengeAttempt =
-                                $finalChallengeAttempts->get($missionId);
-                        @endphp
+    $quizAttempt =
+        $quizAttempts->get($missionId);
+
+    $finalChallengeAttempt =
+        $finalChallengeAttempts->get($missionId);
+
+    /*
+     * Menghitung selisih nilai Posttest dan Pretest.
+     * Nilai positif berarti meningkat.
+     * Nilai nol berarti tetap.
+     * Nilai negatif berarti menurun.
+     */
+    $scoreImprovement = null;
+
+    if ($pretestAttempt && $posttestAttempt) {
+        $scoreImprovement =
+            (float) $posttestAttempt->score
+            - (float) $pretestAttempt->score;
+    }
+@endphp
 
                         <article
                             class="rounded-2xl border border-neutral-200 p-5 dark:border-neutral-700"
@@ -723,7 +741,7 @@
                             </div>
 
                             <div
-                                class="portfolio-print-results mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+                               class="portfolio-print-results mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-5"
                             >
                                 {{-- Pretest --}}
                                 <div
@@ -1046,6 +1064,249 @@
                                         </p>
                                     @endif
                                 </div>
+
+                                                                {{-- Posttest --}}
+                                <div
+                                    class="rounded-2xl border border-cyan-200 bg-cyan-50 p-5 dark:border-cyan-800 dark:bg-cyan-950"
+                                >
+                                    <div
+                                        class="flex items-center justify-between gap-3"
+                                    >
+                                        <div
+                                            class="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-xl shadow-sm dark:bg-neutral-900"
+                                        >
+                                            📊
+                                        </div>
+
+                                        @if ($posttestAttempt)
+                                            <span
+                                                class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"
+                                            >
+                                                Selesai
+                                            </span>
+                                        @else
+                                            <span
+                                                class="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+                                            >
+                                                Belum Ada
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <p
+                                        class="mt-4 text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-300"
+                                    >
+                                        Posttest
+                                    </p>
+
+                                    @if ($posttestAttempt)
+                                        <p
+                                            class="mt-2 text-3xl font-bold text-neutral-950 dark:text-white"
+                                        >
+                                            {{ number_format(
+                                                (float) $posttestAttempt->score,
+                                                0,
+                                                ',',
+                                                '.'
+                                            ) }}
+
+                                            <span
+                                                class="text-base text-cyan-600 dark:text-cyan-300"
+                                            >
+                                                / 100
+                                            </span>
+                                        </p>
+
+                                        <p
+                                            class="mt-2 text-sm text-neutral-600 dark:text-neutral-300"
+                                        >
+                                            {{ $posttestAttempt->correct_answers }}
+                                            jawaban benar dari
+                                            {{ $posttestAttempt->total_questions }}
+                                            soal
+                                        </p>
+
+                                        <p
+                                            class="mt-4 text-xs text-neutral-500 dark:text-neutral-400"
+                                        >
+                                            Diselesaikan
+                                            {{ $posttestAttempt->completed_at
+                                                ->locale('id')
+                                                ->translatedFormat(
+                                                    'd F Y, H:i'
+                                                ) }}
+                                        </p>
+                                    @else
+                                        <p
+                                            class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
+                                        >
+                                            Data Posttest belum tersedia.
+                                        </p>
+                                    @endif
+                                </div>
+                                </div>
+
+                                                            {{-- Peningkatan nilai Pretest–Posttest --}}
+                            <div
+                                class="mt-5 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 via-white to-emerald-50 p-5 dark:border-indigo-800 dark:from-indigo-950 dark:via-neutral-900 dark:to-emerald-950"
+                            >
+                                <div
+                                    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                                >
+                                    <div>
+                                        <p
+                                            class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-300"
+                                        >
+                                            Perkembangan Hasil Belajar
+                                        </p>
+
+                                        <h4
+                                            class="mt-2 text-lg font-bold text-neutral-950 dark:text-white"
+                                        >
+                                            Peningkatan Nilai Pretest–Posttest
+                                        </h4>
+
+                                        <p
+                                            class="mt-2 text-sm text-neutral-600 dark:text-neutral-300"
+                                        >
+                                            Selisih dihitung dari nilai
+                                            Posttest dikurangi nilai Pretest.
+                                        </p>
+                                    </div>
+
+                                    @if ($scoreImprovement !== null)
+                                        <div class="sm:text-right">
+                                            <p
+                                                class="text-3xl font-bold
+                                                    @if ($scoreImprovement > 0)
+                                                        text-emerald-600
+                                                    @elseif ($scoreImprovement < 0)
+                                                        text-red-600
+                                                    @else
+                                                        text-amber-600
+                                                    @endif"
+                                            >
+                                                @if ($scoreImprovement > 0)
+                                                    +
+                                                @endif
+
+                                                {{ number_format(
+                                                    $scoreImprovement,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                ) }}
+
+                                                <span class="text-base">
+                                                    poin
+                                                </span>
+                                            </p>
+
+                                            @if ($scoreImprovement > 0)
+                                                <span
+                                                    class="mt-2 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                                >
+                                                    Nilai Meningkat
+                                                </span>
+                                            @elseif ($scoreImprovement < 0)
+                                                <span
+                                                    class="mt-2 inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-950 dark:text-red-300"
+                                                >
+                                                    Nilai Menurun
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="mt-2 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                                                >
+                                                    Nilai Tetap
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span
+                                            class="w-fit rounded-full bg-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+                                        >
+                                            Belum Dapat Dihitung
+                                        </span>
+                                    @endif
+                                </div>
+
+                                @if (
+                                    $pretestAttempt
+                                    && $posttestAttempt
+                                )
+                                    <div
+                                        class="mt-5 grid gap-3 sm:grid-cols-3"
+                                    >
+                                        <div
+                                            class="rounded-xl bg-white/80 p-4 dark:bg-neutral-900/70"
+                                        >
+                                            <p
+                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400"
+                                            >
+                                                Nilai Pretest
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-xl font-bold text-blue-600"
+                                            >
+                                                {{ number_format(
+                                                    (float) $pretestAttempt->score,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                ) }}
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            class="rounded-xl bg-white/80 p-4 dark:bg-neutral-900/70"
+                                        >
+                                            <p
+                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400"
+                                            >
+                                                Nilai Posttest
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-xl font-bold text-cyan-600"
+                                            >
+                                                {{ number_format(
+                                                    (float) $posttestAttempt->score,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                ) }}
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            class="rounded-xl bg-white/80 p-4 dark:bg-neutral-900/70"
+                                        >
+                                            <p
+                                                class="text-xs font-semibold text-neutral-500 dark:text-neutral-400"
+                                            >
+                                                Selisih Nilai
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-xl font-bold text-indigo-600"
+                                            >
+                                                @if ($scoreImprovement > 0)
+                                                    +
+                                                @endif
+
+                                                {{ number_format(
+                                                    $scoreImprovement,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                ) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
+
                             </div>
                         </article>
                     @endforeach

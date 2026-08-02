@@ -8,6 +8,7 @@ use App\Models\FinalChallengeAttempt;
 use App\Models\MicroExerciseAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
+use App\Models\PosttestAttempt;
 use App\Models\PretestAttempt;
 use App\Models\QuizAttempt;
 use App\Models\UserBadge;
@@ -113,6 +114,22 @@ class EPortfolioController extends Controller
                 return $attempts->first();
             });
 
+            /*
+ * Mengambil hasil Posttest terbaru pada setiap misi.
+ *
+ * Collection diindeks menggunakan mission_id agar nilai
+ * Posttest dapat dipasangkan dengan nilai Pretest.
+ */
+$posttestAttempts = PosttestAttempt::query()
+    ->where('user_id', $user->id)
+    ->whereNotNull('completed_at')
+    ->latest('completed_at')
+    ->get()
+    ->groupBy('mission_id')
+    ->map(function ($attempts) {
+        return $attempts->first();
+    });
+
         /*
          * Mengambil hasil Latihan Mikro terbaru pada setiap misi.
          */
@@ -195,8 +212,9 @@ class EPortfolioController extends Controller
             'highestChallengeScore' =>
                 $highestChallengeScore,
             'pretestAttempts' => $pretestAttempts,
-            'microExerciseAttempts' =>
-                $microExerciseAttempts,
+'posttestAttempts' => $posttestAttempts,
+'microExerciseAttempts' =>
+    $microExerciseAttempts,
             'quizAttempts' => $quizAttempts,
             'finalChallengeAttempts' =>
                 $finalChallengeAttempts,
