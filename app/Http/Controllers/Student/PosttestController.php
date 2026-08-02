@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FinalChallengeAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
+use App\Models\PosttestAttempt;
 use App\Services\BadgeAwardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -125,11 +126,11 @@ class PosttestController extends Controller
                 'user_id' => $request->user()->id,
             ],
             [
-                'status' => 'in_progress',
-                'started_at' => now(),
-                'total_questions' => $questionCount,
-                'correct_answers' => 0,
-            ]
+    'status' => PosttestAttempt::STATUS_IN_PROGRESS,
+    'started_at' => now(),
+    'total_questions' => $questionCount,
+    'correct_answers' => 0,
+]
         );
 
         return redirect()->route(
@@ -192,14 +193,17 @@ class PosttestController extends Controller
                 );
         }
 
-        if ($attempt->status === 'completed') {
+        if (
+    $attempt->status
+    === PosttestAttempt::STATUS_COMPLETED
+) {
             return redirect()->route(
                 'student.missions.posttest.show',
                 ['mission' => $mission->slug]
             );
         }
 
-        $questions = $mission
+                $questions = $mission
             ->posttestQuestions()
             ->where('is_active', true)
             ->select([
@@ -208,6 +212,7 @@ class PosttestController extends Controller
                 'question_text',
                 'sequence',
             ])
+            ->orderBy('sequence')
             ->with([
                 'options' => function ($query) {
                     $query
@@ -290,7 +295,10 @@ class PosttestController extends Controller
                 );
         }
 
-        if ($attempt->status === 'completed') {
+        if (
+    $attempt->status
+    === PosttestAttempt::STATUS_COMPLETED
+) {
             return redirect()->route(
                 'student.missions.posttest.show',
                 ['mission' => $mission->slug]
@@ -321,10 +329,11 @@ class PosttestController extends Controller
         );
 
         $questions = $mission
-            ->posttestQuestions()
-            ->where('is_active', true)
-            ->with('options')
-            ->get();
+    ->posttestQuestions()
+    ->where('is_active', true)
+    ->with('options')
+    ->orderBy('sequence')
+    ->get();
 
         abort_if(
             $questions->isEmpty(),
@@ -404,12 +413,12 @@ class PosttestController extends Controller
             );
 
             $attempt->update([
-                'status' => 'completed',
-                'completed_at' => now(),
-                'total_questions' => $totalQuestions,
-                'correct_answers' => $correctAnswers,
-                'score' => $score,
-            ]);
+    'status' => PosttestAttempt::STATUS_COMPLETED,
+    'completed_at' => now(),
+    'total_questions' => $totalQuestions,
+    'correct_answers' => $correctAnswers,
+    'score' => $score,
+]);
             MissionCompletion::firstOrCreate(
     [
         'user_id' => $request->user()->id,
