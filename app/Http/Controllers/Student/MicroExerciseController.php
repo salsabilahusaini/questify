@@ -9,6 +9,7 @@ use App\Models\MicroExerciseQuestion;
 use App\Models\MicroExerciseAnswer;
 use App\Models\MicroExerciseAttempt;
 use App\Models\MicroExerciseOption;
+use App\Models\PretestAttempt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Models\Mission;
@@ -28,9 +29,12 @@ class MicroExerciseController extends Controller
         abort_unless($mission->is_published, 404);
 
         $pretestCompleted = $mission->pretestAttempts()
-            ->where('user_id', $request->user()->id)
-            ->where('status', 'completed')
-            ->exists();
+    ->where('user_id', $request->user()->id)
+    ->where(
+        'status',
+        PretestAttempt::STATUS_COMPLETED
+    )
+    ->exists();
 
         $requiredBlockIds = MaterialBlock::query()
             ->where('is_active', true)
@@ -123,6 +127,55 @@ public function submit(
     Mission $mission
 ): RedirectResponse {
     abort_unless($mission->is_published, 404);
+
+    $pretestCompleted = $mission->pretestAttempts()
+        ->where('user_id', $request->user()->id)
+        ->where(
+            'status',
+            PretestAttempt::STATUS_COMPLETED
+        )
+        ->exists();
+
+    $requiredBlockIds = MaterialBlock::query()
+        ->where('is_active', true)
+        ->where('is_required', true)
+        ->whereHas(
+            'materialSection',
+            function ($query) use ($mission) {
+                $query
+                    ->where('mission_id', $mission->id)
+                    ->where('is_active', true);
+            }
+        )
+        ->pluck('id');
+
+    $completedRequiredBlocks =
+        MaterialBlockProgress::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn(
+                'material_block_id',
+                $requiredBlockIds
+            )
+            ->where('is_completed', true)
+            ->count();
+
+    $materialCompleted = $pretestCompleted
+        && $requiredBlockIds->isNotEmpty()
+        && $completedRequiredBlocks
+            === $requiredBlockIds->count();
+
+    if (! $materialCompleted) {
+        return redirect()
+            ->route(
+                'student.missions.show',
+                ['mission' => $mission->slug]
+            )
+            ->with(
+                'error',
+                'Selesaikan seluruh Materi Prakelas terlebih dahulu.'
+            );
+    }
+
 
     $questions = MicroExerciseQuestion::query()
         ->where('is_active', true)
