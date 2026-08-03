@@ -9,6 +9,7 @@ use App\Models\Mission;
 use App\Models\PretestAttempt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MaterialProgressController extends Controller
 {
@@ -65,21 +66,26 @@ class MaterialProgressController extends Controller
      * Menambahkan durasi baca yang dikirim secara berkala.
      */
     public function heartbeat(
-        Request $request,
-        Mission $mission,
-        MaterialBlock $block
-    ): JsonResponse {
-        $this->ensureAccess($request, $mission, $block);
+    Request $request,
+    Mission $mission,
+    MaterialBlock $block
+): JsonResponse {
+    $this->ensureAccess($request, $mission, $block);
 
-        $validated = $request->validate([
-            'seconds' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:30',
-            ],
-        ]);
+    $validated = $request->validate([
+        'seconds' => [
+            'required',
+            'integer',
+            'min:1',
+            'max:30',
+        ],
+    ]);
 
+    $result = DB::transaction(function () use (
+        $request,
+        $block,
+        $validated
+    ): array {
         $progress = MaterialBlockProgress::firstOrCreate(
             [
                 'user_id' => $request->user()->id,
@@ -94,32 +100,78 @@ class MaterialProgressController extends Controller
             ]
         );
 
-        $progress->first_opened_at =
-            $progress->first_opened_at ?? now();
+        $progress = MaterialBlockProgress::query()
+            ->whereKey($progress->id)
+            ->lockForUpdate()
+            ->firstOrFail();
 
-        $progress->total_read_seconds =
-            $progress->total_read_seconds + $validated['seconds'];
+        $now = now();
 
-        $progress->last_activity_at = now();
+        $lastActivityAt = $progress->last_activity_at
+            ?? $progress->first_opened_at
+            ?? $now;
+
+        $elapsedSeconds = max(
+            0,
+            $now->getTimestamp()
+                - $lastActivityAt->getTimestamp()
+        );
+
+        $creditedSeconds = min(
+            $validated['seconds'],
+            $elapsedSeconds
+        );
 
         if (
             ! $progress->is_completed
-            && $progress->total_read_seconds
-                >= $block->minimum_read_seconds
+            && $creditedSeconds > 0
         ) {
-            $progress->is_completed = true;
-            $progress->completed_at = now();
+            $progress->total_read_seconds +=
+                $creditedSeconds;
+
+            $progress->last_activity_at = $now;
+
+            if (
+                $progress->total_read_seconds
+                >= $block->minimum_read_seconds
+            ) {
+                $progress->is_completed = true;
+                $progress->completed_at = $now;
+            }
+
+            $progress->save();
         }
 
-        $progress->save();
+        if (
+            ! $progress->is_completed
+            && $block->minimum_read_seconds === 0
+        ) {
+            $progress->is_completed = true;
+            $progress->completed_at = $now;
+            $progress->last_activity_at = $now;
+            $progress->save();
+        }
 
-        return response()->json([
-            'message' => 'Durasi baca berhasil diperbarui.',
-            'total_read_seconds' => $progress->total_read_seconds,
-            'minimum_read_seconds' => $block->minimum_read_seconds,
-            'is_completed' => $progress->is_completed,
-        ]);
-    }
+        return [
+            'progress' => $progress->fresh(),
+            'credited_seconds' => $creditedSeconds,
+        ];
+    });
+
+    /** @var MaterialBlockProgress $progress */
+    $progress = $result['progress'];
+
+    return response()->json([
+        'message' => 'Durasi baca berhasil diperbarui.',
+        'credited_seconds' =>
+            $result['credited_seconds'],
+        'total_read_seconds' =>
+            $progress->total_read_seconds,
+        'minimum_read_seconds' =>
+            $block->minimum_read_seconds,
+        'is_completed' => $progress->is_completed,
+    ]);
+}
 
     /**
      * Memastikan siswa berhak mengakses blok materi.

@@ -8,6 +8,7 @@ use App\Models\Mission;
 use App\Models\PretestAttempt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -70,6 +71,16 @@ class MaterialProgressTest extends TestCase
             'updated_at' => now(),
         ]);
     }
+
+    /**
+ * Mengembalikan waktu pengujian setelah setiap test.
+ */
+protected function tearDown(): void
+{
+    Carbon::setTestNow();
+
+    parent::tearDown();
+}
 
     /**
      * Halaman Materi Prakelas tidak dapat dibuka
@@ -269,6 +280,72 @@ class MaterialProgressTest extends TestCase
             $progressCount
         );
     }
+    /**
+ * Heartbeat yang dikirim tanpa adanya waktu berlalu
+ * tidak boleh menambahkan durasi baca.
+ */
+public function test_immediate_heartbeat_does_not_add_read_time(): void
+{
+    $this->completePretest();
+
+    Carbon::setTestNow('2026-08-03 10:00:00');
+
+    $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.open',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        )
+        ->assertOk();
+
+    $response = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.heartbeat',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            ),
+            [
+                'seconds' => 30,
+            ]
+        );
+
+    $response->assertOk();
+
+    $response->assertJsonPath(
+        'credited_seconds',
+        0
+    );
+
+    $response->assertJsonPath(
+        'total_read_seconds',
+        0
+    );
+
+    $response->assertJsonPath(
+        'is_completed',
+        false
+    );
+
+    $this->assertDatabaseHas(
+        'material_block_progresses',
+        [
+            'user_id' => $this->student->id,
+            'material_block_id' =>
+                $this->materialBlockId,
+            'total_read_seconds' => 0,
+            'is_completed' => false,
+        ]
+    );
+}
 
     /**
      * Heartbeat menambahkan durasi baca
@@ -278,8 +355,10 @@ class MaterialProgressTest extends TestCase
     {
         $this->completePretest();
 
-        $this
-            ->actingAs($this->student)
+Carbon::setTestNow('2026-08-03 10:00:00');
+
+$this
+    ->actingAs($this->student)
             ->postJson(
                 route(
                     'student.missions.material.blocks.open',
@@ -298,6 +377,9 @@ class MaterialProgressTest extends TestCase
                 'block' => $this->materialBlockId,
             ]
         );
+        Carbon::setTestNow(
+    now()->addSeconds(5)
+);
 
         $firstHeartbeat = $this
             ->actingAs($this->student)
@@ -319,6 +401,9 @@ class MaterialProgressTest extends TestCase
             'is_completed',
             false
         );
+        Carbon::setTestNow(
+    now()->addSeconds(5)
+);
 
         $secondHeartbeat = $this
             ->actingAs($this->student)
