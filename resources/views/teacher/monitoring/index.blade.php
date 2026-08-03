@@ -300,26 +300,33 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-3">
-    @if ($row['is_ready'])
+    @if ($focusedMission === null)
+    <span
+        class="inline-flex w-fit items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-xs font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+    >
+        <span>—</span>
+        Belum Ada Misi
+    </span>
+@elseif ($row['is_ready'])
+    <span
+        class="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+    >
         <span
-            class="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+            class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white"
         >
-            <span
-                class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white"
-            >
-                ✓
-            </span>
+            ✓
+        </span>
 
-            Siap Belajar
-        </span>
-    @else
-        <span
-            class="inline-flex w-fit items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-        >
-            <span>!</span>
-            Perlu Perhatian
-        </span>
-    @endif
+        Siap Belajar
+    </span>
+@else
+    <span
+        class="inline-flex w-fit items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+    >
+        <span>!</span>
+        Perlu Perhatian
+    </span>
+@endif
 
         <a
         href="{{ route(
