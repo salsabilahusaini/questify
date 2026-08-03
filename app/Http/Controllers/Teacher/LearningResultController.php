@@ -73,8 +73,11 @@ class LearningResultController extends Controller
                     $focusedMission->id
                 )
                 ->whereIn('user_id', $studentIds)
-                ->whereNotNull('completed_at')
-                ->latest('completed_at')
+->where(
+    'status',
+    PretestAttempt::STATUS_COMPLETED
+)
+->latest('completed_at')
                 ->get()
                 ->groupBy('user_id')
                 ->map(
@@ -159,8 +162,11 @@ $posttestAttempts = PosttestAttempt::query()
         $focusedMission->id
     )
     ->whereIn('user_id', $studentIds)
-    ->whereNotNull('completed_at')
-    ->latest('completed_at')
+->where(
+    'status',
+    PosttestAttempt::STATUS_COMPLETED
+)
+->latest('completed_at')
     ->get()
     ->groupBy('user_id')
     ->map(
@@ -345,10 +351,13 @@ $posttestAttempts = PosttestAttempt::query()
             ->where('is_complete', true)
             ->count();
 
-        $incompleteResultCount = max(
+        $incompleteResultCount =
+    $focusedMission !== null
+        ? max(
             0,
             $studentCount - $completeResultCount
-        );
+        )
+        : 0;
 
         /*
          * Menghitung rata-rata setiap aktivitas berdasarkan
