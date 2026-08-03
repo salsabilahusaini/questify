@@ -208,7 +208,55 @@ CODE,
     $response->assertSee('Posttest');
     $response->assertSee('Belum selesai');
 }
+/**
+ * Siswa tidak dianggap perlu perhatian
+ * ketika belum ada misi yang dipublikasikan.
+ */
+public function test_teacher_dashboard_has_no_attention_students_without_published_mission(): void
+{
+    $teacher = User::factory()->create([
+        'role' => User::ROLE_TEACHER,
+    ]);
 
+    User::factory()
+        ->count(2)
+        ->create([
+            'role' => User::ROLE_STUDENT,
+        ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->get(
+            route('teacher.dashboard')
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'studentCount',
+        2
+    );
+
+    $response->assertViewHas(
+        'activeModuleCount',
+        0
+    );
+
+    $response->assertViewHas(
+        'readyStudentCount',
+        0
+    );
+
+    $response->assertViewHas(
+        'attentionStudentCount',
+        0
+    );
+
+    $response->assertViewHas(
+        'focusedMission',
+        null
+    );
+}
     /**
      * Guru dapat membuka dashboard guru.
      */

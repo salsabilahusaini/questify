@@ -57,8 +57,8 @@ class DashboardController extends Controller
         $microExerciseCompletedCount = 0;
         $quizCompletedCount = 0;
         $readyStudentCount = 0;
-        $attentionStudentCount = $studentCount;
-        $requiredMaterialBlockCount = 0;
+$attentionStudentCount = 0;
+$requiredMaterialBlockCount = 0;;
 
         if ($focusedMission !== null && $studentCount > 0) {
             /*
@@ -72,8 +72,11 @@ class DashboardController extends Controller
                         $focusedMission->id
                     )
                     ->whereIn('user_id', $studentIds)
-                    ->whereNotNull('completed_at')
-                    ->distinct()
+->where(
+    'status',
+    PretestAttempt::STATUS_COMPLETED
+)
+->distinct()
                     ->pluck('user_id');
 
             /*
