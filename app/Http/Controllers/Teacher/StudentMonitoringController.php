@@ -106,8 +106,11 @@ class StudentMonitoringController extends Controller
                         $focusedMission->id
                     )
                     ->whereIn('user_id', $studentIds)
-                    ->whereNotNull('completed_at')
-                    ->latest('completed_at')
+->where(
+    'status',
+    PretestAttempt::STATUS_COMPLETED
+)
+->latest('completed_at')
                     ->get()
                     ->groupBy('user_id')
                     ->map(
@@ -425,10 +428,13 @@ class StudentMonitoringController extends Controller
             ->where('is_ready', true)
             ->count();
 
-        $attentionStudentCount = max(
+        $attentionStudentCount =
+    $focusedMission !== null
+        ? max(
             0,
             $studentCount - $readyStudentCount
-        );
+        )
+        : 0;
 
         return view('teacher.monitoring.index', [
             'publishedMissions' => $publishedMissions,
@@ -543,12 +549,15 @@ $missionCompletion = null;
                 PretestAttempt::query()
                     ->where('user_id', $student->id)
                     ->where(
-                        'mission_id',
-                        $focusedMission->id
-                    )
-                    ->whereNotNull('completed_at')
-                    ->latest('completed_at')
-                    ->first();
+    'mission_id',
+    $focusedMission->id
+)
+->where(
+    'status',
+    PretestAttempt::STATUS_COMPLETED
+)
+->latest('completed_at')
+->first();
 
             /*
              * Mengambil hasil Latihan Mikro terbaru.
@@ -610,7 +619,10 @@ $posttestAttempt = PosttestAttempt::query()
         'mission_id',
         $focusedMission->id
     )
-    ->whereNotNull('completed_at')
+    ->where(
+        'status',
+        PosttestAttempt::STATUS_COMPLETED
+    )
     ->latest('completed_at')
     ->first();
 
