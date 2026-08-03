@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MaterialBlock;
 use App\Models\MaterialBlockProgress;
 use App\Models\Mission;
+use App\Models\PretestAttempt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -139,9 +140,12 @@ class MaterialProgressController extends Controller
         abort_unless($blockBelongsToMission, 404);
 
         $pretestCompleted = $mission->pretestAttempts()
-            ->where('user_id', $request->user()->id)
-            ->where('status', 'completed')
-            ->exists();
+    ->where('user_id', $request->user()->id)
+    ->where(
+        'status',
+        PretestAttempt::STATUS_COMPLETED
+    )
+    ->exists();
 
         abort_unless(
             $pretestCompleted,
