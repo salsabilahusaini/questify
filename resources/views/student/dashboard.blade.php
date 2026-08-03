@@ -16,8 +16,16 @@
 
         $pretestCompleted = $pretestCompleted ?? false;
         $materialCompleted = $materialCompleted ?? false;
-        $microPracticeCompleted = $microPracticeCompleted ?? false;
-        $quizCompleted = $quizCompleted ?? false;
+        $microPracticeCompleted =
+    $microPracticeCompleted ?? false;
+
+$quizCompleted = $quizCompleted ?? false;
+
+$finalChallengeCompleted =
+    $finalChallengeCompleted ?? false;
+
+$posttestCompleted =
+    $posttestCompleted ?? false;
 
         $readinessItems = [
             [
@@ -41,6 +49,32 @@
                 'completed' => $quizCompleted,
             ],
         ];
+        $missionSteps = [
+    [
+        'label' => 'Pretest',
+        'completed' => $pretestCompleted,
+    ],
+    [
+        'label' => 'Materi Prakelas',
+        'completed' => $materialCompleted,
+    ],
+    [
+        'label' => 'Latihan Mikro',
+        'completed' => $microPracticeCompleted,
+    ],
+    [
+        'label' => 'Kuis Materi',
+        'completed' => $quizCompleted,
+    ],
+    [
+        'label' => 'Final Challenge',
+        'completed' => $finalChallengeCompleted,
+    ],
+    [
+        'label' => 'Posttest',
+        'completed' => $posttestCompleted,
+    ],
+];
 
         $completedReadinessCount = array_sum(
             array_map(
@@ -320,18 +354,19 @@
                             </span>
 
                             <h2 class="mt-4 text-2xl font-bold text-neutral-950 dark:text-white">
-                                Memahami Konsep Perulangan
-                            </h2>
+    {{ $activeMission?->title ?? 'Belum Ada Misi Aktif' }}
+</h2>
 
                             <p class="mt-2 max-w-2xl text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-                                Pelajari pengertian, fungsi, komponen, kondisi
-                                berhenti, serta kesalahan umum dalam struktur
-                                perulangan.
-                            </p>
+    {{ $activeMission?->description
+        ?? 'Belum ada misi pembelajaran aktif yang tersedia.' }}
+</p>
                         </div>
 
                         <span class="w-fit rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                            Misi 1
+                            {{ $activeMission !== null
+    ? 'Misi ' . $activeMission->sequence
+    : 'Belum Tersedia' }}
                         </span>
                     </div>
                 </div>
@@ -396,6 +431,55 @@
                                 style="width: {{ $missionProgress }}%"
                             ></div>
                         </div>
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    @foreach ($missionSteps as $step)
+        <div
+            @class([
+                'flex items-center gap-3 rounded-2xl border p-3',
+                'border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40' => $step['completed'],
+                'border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900' => ! $step['completed'],
+            ])
+        >
+            <div
+                @class([
+                    'flex size-8 shrink-0 items-center justify-center rounded-xl',
+                    'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300' => $step['completed'],
+                    'bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400' => ! $step['completed'],
+                ])
+            >
+                @if ($step['completed'])
+                    <svg
+                        class="size-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="m5 12 4 4L19 6" />
+                    </svg>
+                @else
+                    <span class="size-2 rounded-full bg-current"></span>
+                @endif
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-neutral-900 dark:text-white">
+                    {{ $step['label'] }}
+                </p>
+
+                <p
+                    @class([
+                        'mt-0.5 text-xs font-medium',
+                        'text-emerald-600 dark:text-emerald-400' => $step['completed'],
+                        'text-neutral-500 dark:text-neutral-400' => ! $step['completed'],
+                    ])
+                >
+                    {{ $step['completed'] ? 'Selesai' : 'Belum selesai' }}
+                </p>
+            </div>
+        </div>
+    @endforeach
+</div>
                     </div>
 
                     <div

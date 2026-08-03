@@ -9,6 +9,8 @@ use App\Models\MaterialBlockProgress;
 use App\Models\MicroExerciseAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
+use App\Models\PosttestAttempt;
+use App\Models\PretestAttempt;
 use App\Models\QuizAttempt;
 use App\Models\UserBadge;
 use Illuminate\Http\Request;
@@ -71,8 +73,9 @@ class DashboardController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            $pretestCompleted =
-                $pretestAttempt?->status === 'completed';
+           $pretestCompleted =
+    $pretestAttempt?->status
+    === PretestAttempt::STATUS_COMPLETED;
 
             /*
              * Mengambil seluruh blok materi wajib
@@ -163,7 +166,10 @@ class DashboardController extends Controller
 $posttestCompleted = $activeMission
     ->posttestAttempts()
     ->where('user_id', $user->id)
-    ->where('status', 'completed')
+    ->where(
+        'status',
+        PosttestAttempt::STATUS_COMPLETED
+    )
     ->exists();
 
             /*
@@ -185,10 +191,6 @@ $posttestCompleted = $activeMission
 $missionProgress = (int) round(
     ($completedStepCount / 6) * 100
 );
-
-            $missionProgress = (int) round(
-                ($completedStepCount / 5) * 100
-            );
         }
 
         return view('student.dashboard', [
@@ -204,7 +206,9 @@ $missionProgress = (int) round(
             'microPracticeCompleted' =>
                 $microPracticeCompleted,
             'quizCompleted' => $quizCompleted,
-            'posttestCompleted' => $posttestCompleted,
+'finalChallengeCompleted' =>
+    $finalChallengeCompleted,
+'posttestCompleted' => $posttestCompleted,
         ]);
     }
 }
