@@ -68,7 +68,127 @@ class PosttestQuestionManagementTest extends TestCase
             $question->question_text
         );
     }
+/**
+ * Guru dapat membuka formulir dan menambahkan
+ * soal Posttest dengan empat pilihan.
+ */
+public function test_teacher_can_create_posttest_question(): void
+{
+    $teacher = $this->createTeacher();
 
+    $mission = $this->createMission();
+
+    $existingQuestion = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions($existingQuestion);
+
+    $createResponse = $this
+        ->actingAs($teacher)
+        ->get(
+            route(
+                'teacher.missions.posttest.create',
+                $mission
+            )
+        );
+
+    $createResponse->assertOk();
+
+    $createResponse->assertViewIs(
+        'teacher.missions.posttest.create'
+    );
+
+    $createResponse->assertViewHas(
+        'nextSequence',
+        2
+    );
+
+    $storeResponse = $this
+        ->actingAs($teacher)
+        ->post(
+            route(
+                'teacher.missions.posttest.store',
+                $mission
+            ),
+            [
+                'question_text' =>
+                    'Struktur manakah yang digunakan untuk mengulang perintah?',
+                'sequence' => 2,
+                'is_active' => '1',
+                'correct_option_index' => 1,
+                'options' => [
+                    [
+                        'option_text' =>
+                            'Struktur percabangan',
+                        'sequence' => 1,
+                    ],
+                    [
+                        'option_text' =>
+                            'Struktur perulangan',
+                        'sequence' => 2,
+                    ],
+                    [
+                        'option_text' =>
+                            'Deklarasi variabel',
+                        'sequence' => 3,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pemanggilan fungsi',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $storeResponse->assertRedirect(
+        route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+    );
+
+    $storeResponse->assertSessionHas(
+        'success',
+        'Soal Posttest berhasil ditambahkan.'
+    );
+
+    $newQuestion = PosttestQuestion::query()
+        ->where('mission_id', $mission->id)
+        ->where('sequence', 2)
+        ->first();
+
+    $this->assertNotNull($newQuestion);
+
+    $this->assertDatabaseHas(
+        'posttest_questions',
+        [
+            'id' => $newQuestion->id,
+            'question_text' =>
+                'Struktur manakah yang digunakan untuk mengulang perintah?',
+            'sequence' => 2,
+            'is_active' => true,
+        ]
+    );
+
+    $this->assertDatabaseCount(
+        'posttest_options',
+        8
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_options',
+        [
+            'posttest_question_id' =>
+                $newQuestion->id,
+            'option_text' =>
+                'Struktur perulangan',
+            'sequence' => 2,
+            'is_correct' => true,
+        ]
+    );
+}
     /**
      * Guru dapat memperbarui pertanyaan,
      * pilihan, kunci jawaban, dan status soal.

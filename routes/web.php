@@ -245,6 +245,20 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.posttest.index');
 
+    Route::get(
+    '/teacher/missions/{mission}/posttest/create',
+    [TeacherPosttestQuestionController::class, 'create']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.create');
+
+Route::post(
+    '/teacher/missions/{mission}/posttest',
+    [TeacherPosttestQuestionController::class, 'store']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.store');
+
 Route::get(
     '/teacher/missions/{mission}/posttest/{question}/edit',
     [TeacherPosttestQuestionController::class, 'edit']

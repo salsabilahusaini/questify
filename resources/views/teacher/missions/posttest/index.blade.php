@@ -58,16 +58,29 @@
                         </p>
                     </div>
 
-                    <a
-                        href="{{ route(
-                            'teacher.missions.show',
-                            $mission
-                        ) }}"
-                        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm"
-                    >
-                        <span>←</span>
-                        Kembali ke Detail Misi
-                    </a>
+                    <div class="flex flex-wrap items-center gap-3">
+    <a
+        href="{{ route(
+            'teacher.missions.posttest.create',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+    >
+        <span>＋</span>
+        Tambah Soal
+    </a>
+
+    <a
+        href="{{ route(
+            'teacher.missions.show',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm"
+    >
+        <span>←</span>
+        Kembali ke Detail Misi
+    </a>
+</div>
                 </div>
             </div>
         </section>
