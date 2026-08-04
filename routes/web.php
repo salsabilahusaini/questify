@@ -273,6 +273,13 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.posttest.update');
 
+    Route::delete(
+    '/teacher/missions/{mission}/posttest/{question}',
+    [TeacherPosttestQuestionController::class, 'destroy']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.destroy');
+
     /*
      * Dashboard khusus Peserta Didik.
      */

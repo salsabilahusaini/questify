@@ -3,6 +3,8 @@
 namespace Tests\Feature\Teacher;
 
 use App\Models\Mission;
+use App\Models\PosttestAnswer;
+use App\Models\PosttestAttempt;
 use App\Models\PosttestOption;
 use App\Models\PosttestQuestion;
 use App\Models\User;
@@ -293,6 +295,146 @@ public function test_teacher_can_create_posttest_question(): void
             ]
         );
     }
+    /**
+ * Guru dapat menghapus soal Posttest yang belum
+ * pernah memiliki jawaban peserta didik.
+ */
+public function test_teacher_can_delete_unused_posttest_question(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.posttest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'success',
+        'Soal Posttest berhasil dihapus.'
+    );
+
+    $this->assertDatabaseMissing(
+        'posttest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    foreach ($options as $option) {
+        $this->assertDatabaseMissing(
+            'posttest_options',
+            [
+                'id' => $option->id,
+            ]
+        );
+    }
+}
+
+/**
+ * Soal Posttest yang sudah memiliki jawaban
+ * peserta didik tidak boleh dihapus.
+ */
+public function test_teacher_cannot_delete_answered_posttest_question(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $attempt = PosttestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PosttestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(5),
+        'completed_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 1,
+        'score' => 100,
+    ]);
+
+    PosttestAnswer::create([
+        'posttest_attempt_id' => $attempt->id,
+        'posttest_question_id' => $question->id,
+        'selected_option_id' => $options[0]->id,
+        'is_correct' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.posttest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Posttest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_answers',
+        [
+            'posttest_attempt_id' => $attempt->id,
+            'posttest_question_id' => $question->id,
+            'selected_option_id' => $options[0]->id,
+        ]
+    );
+}
 
     /**
      * Guru tidak boleh mengedit soal Posttest

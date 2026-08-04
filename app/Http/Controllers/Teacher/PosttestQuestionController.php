@@ -339,6 +339,52 @@ public function store(
                 'Soal Posttest berhasil diperbarui.'
             );
     }
+    /**
+ * Menghapus soal Posttest yang belum pernah
+ * digunakan dalam jawaban peserta didik.
+ */
+public function destroy(
+    Mission $mission,
+    PosttestQuestion $question
+): RedirectResponse {
+    $this->ensureQuestionBelongsToMission(
+        $mission,
+        $question
+    );
+
+    $hasStudentAnswers = DB::table(
+        'posttest_answers'
+    )
+        ->where(
+            'posttest_question_id',
+            $question->id
+        )
+        ->exists();
+
+    if ($hasStudentAnswers) {
+        return redirect()
+            ->route(
+                'teacher.missions.posttest.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Soal Posttest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+            );
+    }
+
+    $question->delete();
+
+    return redirect()
+        ->route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Posttest berhasil dihapus.'
+        );
+}
 
     /**
      * Memastikan soal Posttest berasal dari misi
