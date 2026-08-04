@@ -93,6 +93,14 @@
             </section>
         @endif
 
+        @if (session('error'))
+    <section
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+    >
+        ! {{ session('error') }}
+    </section>
+@endif
+
         {{-- Ringkasan --}}
         <section
             class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
@@ -258,6 +266,30 @@
                                         Edit Soal
                                         <span>✎</span>
                                     </a>
+                                    <form
+    method="POST"
+    action="{{ route(
+        'teacher.missions.pretest.destroy',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    ) }}"
+    onsubmit="return confirm(
+        'Yakin ingin menghapus soal Pretest ini? Soal yang sudah memiliki jawaban peserta didik tidak dapat dihapus.'
+    );"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700"
+    >
+        Hapus Soal
+        <span>⌫</span>
+    </button>
+</form>
                                 </div>
                             </div>
 

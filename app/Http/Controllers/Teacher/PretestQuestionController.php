@@ -339,7 +339,52 @@ public function store(
                 'Soal Pretest berhasil diperbarui.'
             );
     }
+/**
+ * Menghapus soal Pretest yang belum pernah
+ * digunakan dalam jawaban peserta didik.
+ */
+public function destroy(
+    Mission $mission,
+    PretestQuestion $question
+): RedirectResponse {
+    $this->ensureQuestionBelongsToMission(
+        $mission,
+        $question
+    );
 
+    $hasStudentAnswers = DB::table(
+        'pretest_answers'
+    )
+        ->where(
+            'pretest_question_id',
+            $question->id
+        )
+        ->exists();
+
+    if ($hasStudentAnswers) {
+        return redirect()
+            ->route(
+                'teacher.missions.pretest.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Soal Pretest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+            );
+    }
+
+    $question->delete();
+
+    return redirect()
+        ->route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Pretest berhasil dihapus.'
+        );
+}
     /**
      * Memastikan soal Pretest berasal dari misi
      * yang sedang dikelola.

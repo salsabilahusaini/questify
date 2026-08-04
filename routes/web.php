@@ -168,6 +168,13 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.pretest.update');
 
+    Route::delete(
+    '/teacher/missions/{mission}/pretest/{question}',
+    [TeacherPretestQuestionController::class, 'destroy']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.pretest.destroy');
+
     Route::get(
     '/teacher/missions/{mission}/micro-exercises',
     [TeacherMicroExerciseQuestionController::class, 'index']

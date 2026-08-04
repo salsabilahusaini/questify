@@ -3,6 +3,8 @@
 namespace Tests\Feature\Teacher;
 
 use App\Models\Mission;
+use App\Models\PretestAnswer;
+use App\Models\PretestAttempt;
 use App\Models\PretestOption;
 use App\Models\PretestQuestion;
 use App\Models\User;
@@ -190,7 +192,146 @@ class PretestQuestionManagementTest extends TestCase
             ]
         );
     }
+/**
+ * Guru dapat menghapus soal Pretest yang belum
+ * pernah memiliki jawaban peserta didik.
+ */
+public function test_teacher_can_delete_unused_pretest_question(): void
+{
+    $teacher = $this->createTeacher();
 
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.pretest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'success',
+        'Soal Pretest berhasil dihapus.'
+    );
+
+    $this->assertDatabaseMissing(
+        'pretest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    foreach ($options as $option) {
+        $this->assertDatabaseMissing(
+            'pretest_options',
+            [
+                'id' => $option->id,
+            ]
+        );
+    }
+}
+
+/**
+ * Soal Pretest yang sudah memiliki jawaban
+ * peserta didik tidak boleh dihapus.
+ */
+public function test_teacher_cannot_delete_answered_pretest_question(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $attempt = PretestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PretestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(5),
+        'completed_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 1,
+        'score' => 100,
+    ]);
+
+    PretestAnswer::create([
+        'pretest_attempt_id' => $attempt->id,
+        'pretest_question_id' => $question->id,
+        'selected_option_id' => $options[0]->id,
+        'is_correct' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.pretest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Pretest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_answers',
+        [
+            'pretest_attempt_id' => $attempt->id,
+            'pretest_question_id' => $question->id,
+            'selected_option_id' => $options[0]->id,
+        ]
+    );
+}
     /**
      * Membuat akun guru untuk pengujian.
      */
