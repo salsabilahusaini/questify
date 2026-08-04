@@ -10,6 +10,7 @@ use App\Http\Controllers\Teacher\MissionController as TeacherMissionController;
 use App\Http\Controllers\Teacher\MaterialBlockController as TeacherMaterialBlockController;
 use App\Http\Controllers\Teacher\MaterialSectionController as TeacherMaterialSectionController;
 use App\Http\Controllers\Teacher\PretestQuestionController as TeacherPretestQuestionController;
+use App\Http\Controllers\Teacher\PosttestQuestionController as TeacherPosttestQuestionController;
 use App\Http\Controllers\Teacher\MicroExerciseQuestionController as TeacherMicroExerciseQuestionController;
 use App\Http\Controllers\Teacher\QuizQuestionController as TeacherQuizQuestionController;
 use App\Http\Controllers\Teacher\FinalChallengeController as TeacherFinalChallengeController;
@@ -236,6 +237,27 @@ Route::put(
 )
     ->middleware('role:teacher')
     ->name('teacher.results.index');
+
+    Route::get(
+    '/teacher/missions/{mission}/posttest',
+    [TeacherPosttestQuestionController::class, 'index']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.index');
+
+Route::get(
+    '/teacher/missions/{mission}/posttest/{question}/edit',
+    [TeacherPosttestQuestionController::class, 'edit']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.edit');
+
+Route::put(
+    '/teacher/missions/{mission}/posttest/{question}',
+    [TeacherPosttestQuestionController::class, 'update']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.posttest.update');
 
     /*
      * Dashboard khusus Peserta Didik.

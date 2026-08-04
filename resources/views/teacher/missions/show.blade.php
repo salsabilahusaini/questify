@@ -258,7 +258,7 @@
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
                         {{ $configuredStageCount }}
-                        dari 5 tahap telah dikonfigurasi.
+                        dari 6 tahap telah dikonfigurasi.
                     </p>
                 </div>
 
@@ -286,7 +286,7 @@
             </div>
 
             <div
-                class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5"
+                class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3"
             >
                 @foreach ($stages as $stage)
                     <article
@@ -462,6 +462,44 @@
             class="inline-flex w-fit items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600"
         >
             Kelola Final Challenge
+            <span>→</span>
+        </a>
+    </div>
+</section>
+
+<section class="quest-card p-6">
+    <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+    >
+        <div>
+            <p
+                class="text-xs font-semibold uppercase tracking-wider text-rose-600"
+            >
+                Pengelolaan Aktivitas
+            </p>
+
+            <h2
+                class="mt-2 text-xl font-bold text-neutral-950 dark:text-white"
+            >
+                Soal Posttest
+            </h2>
+
+            <p
+                class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
+            >
+                Kelola pertanyaan, pilihan jawaban, kunci
+                jawaban, urutan, dan status soal Posttest.
+            </p>
+        </div>
+
+        <a
+            href="{{ route(
+                'teacher.missions.posttest.index',
+                $mission
+            ) }}"
+            class="inline-flex w-fit items-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-rose-700"
+        >
+            Kelola Soal Posttest
             <span>→</span>
         </a>
     </div>

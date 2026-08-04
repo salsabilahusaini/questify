@@ -26,11 +26,12 @@ class MissionController extends Controller
                 'finalChallenge:id,mission_id',
             ])
             ->withCount([
-                'pretestQuestions',
-                'materialSections',
-                'quizQuestions',
-                'completions',
-            ])
+    'pretestQuestions',
+    'posttestQuestions',
+    'materialSections',
+    'quizQuestions',
+    'completions',
+])
             ->orderBy('sequence')
             ->get([
                 'id',
@@ -97,18 +98,21 @@ class MissionController extends Controller
                  * memiliki konten pada misi.
                  */
                 $configuredStageCount = collect([
-                    (int) $mission
-                        ->pretest_questions_count > 0,
+    (int) $mission
+        ->pretest_questions_count > 0,
 
-                    $activeMaterialBlockCount > 0,
+    $activeMaterialBlockCount > 0,
 
-                    $microExerciseQuestionCount > 0,
+    $microExerciseQuestionCount > 0,
 
-                    (int) $mission
-                        ->quiz_questions_count > 0,
+    (int) $mission
+        ->quiz_questions_count > 0,
 
-                    $mission->finalChallenge !== null,
-                ])
+    $mission->finalChallenge !== null,
+
+    (int) $mission
+        ->posttest_questions_count > 0,
+])
                     ->filter()
                     ->count();
 
@@ -116,12 +120,18 @@ class MissionController extends Controller
                     'mission' => $mission,
 
                     'pretest_question_count' => (int) (
-                        $mission
-                            ->pretest_questions_count
-                        ?? 0
-                    ),
+    $mission
+        ->pretest_questions_count
+    ?? 0
+),
 
-                    'material_section_count' => (int) (
+'posttest_question_count' => (int) (
+    $mission
+        ->posttest_questions_count
+    ?? 0
+),
+
+'material_section_count' => (int) (
                         $mission
                             ->material_sections_count
                         ?? 0
@@ -223,10 +233,11 @@ class MissionController extends Controller
          * Mengambil jumlah soal dan penyelesaian misi.
          */
         $mission->loadCount([
-            'pretestQuestions',
-            'quizQuestions',
-            'completions',
-        ]);
+    'pretestQuestions',
+    'posttestQuestions',
+    'quizQuestions',
+    'completions',
+]);
 
         /*
          * Menggabungkan seluruh blok dari setiap
@@ -305,6 +316,15 @@ class MissionController extends Controller
                         ? 'Tersedia'
                         : 'Belum tersedia',
             ],
+
+            [
+    'label' => 'Posttest',
+    'configured' =>
+        $mission->posttest_questions_count > 0,
+    'detail' =>
+        $mission->posttest_questions_count
+        . ' soal',
+],
         ]);
 
         $configuredStageCount = $stages
@@ -312,8 +332,8 @@ class MissionController extends Controller
             ->count();
 
         $configuredStagePercentage = (int) round(
-            ($configuredStageCount / 5) * 100
-        );
+    ($configuredStageCount / 6) * 100
+);
 
         return view('teacher.missions.show', [
             'mission' => $mission,
