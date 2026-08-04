@@ -927,11 +927,13 @@ $requiredMaterialBlockCount =
                         tantangan pembelajaran.
                     </p>
 
-                    <span
-                        class="mt-5 inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-600 dark:bg-blue-950 dark:text-blue-300"
-                    >
-                        Segera tersedia
-                    </span>
+                    <a
+    href="{{ route('teacher.missions.index') }}"
+    class="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
+>
+    Kelola Misi
+    <span>→</span>
+</a>
                 </article>
 
                 <article class="quest-card p-5">
@@ -1000,11 +1002,13 @@ $requiredMaterialBlockCount =
                         perkembangan belajar peserta didik.
                     </p>
 
-                    <span
-                        class="mt-5 inline-flex rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300"
-                    >
-                        Segera tersedia
-                    </span>
+                    <a
+    href="{{ route('teacher.results.index') }}"
+    class="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+>
+    Lihat Hasil
+    <span>→</span>
+</a>
                 </article>
             </div>
         </section>

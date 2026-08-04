@@ -50,6 +50,17 @@ class MissionManagementTest extends TestCase
                     ] === 1;
             }
         );
+
+        $response->assertSee(
+    'dari 6 tahap telah dikonfigurasi.'
+);
+$response->assertSee('17%');
+
+$response->assertSee('Posttest');
+
+$response->assertDontSee(
+    'dari 5 tahap telah dikonfigurasi.'
+);
     }
 
     /**

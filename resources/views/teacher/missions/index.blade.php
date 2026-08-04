@@ -168,8 +168,8 @@
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
                         Setiap misi terdiri atas Pretest, Materi
-                        Prakelas, Latihan Mikro, Kuis Materi,
-                        dan Final Challenge.
+Prakelas, Latihan Mikro, Kuis Materi,
+Final Challenge, dan Posttest.
                     </p>
                 </div>
 
@@ -209,7 +209,7 @@
                                         $row[
                                             'configured_stage_count'
                                         ]
-                                        / 5
+                                        / 6
                                     ) * 100
                                 );
 
@@ -259,19 +259,30 @@
                                         ] . ' soal',
                                 ],
                                 [
-                                    'label' => 'Final Challenge',
-                                    'completed' =>
-                                        $row[
-                                            'has_final_challenge'
-                                        ],
-                                    'detail' =>
-                                        $row[
-                                            'has_final_challenge'
-                                        ]
-                                            ? 'Tersedia'
-                                            : 'Belum tersedia',
-                                ],
-                            ];
+    'label' => 'Final Challenge',
+    'completed' =>
+        $row[
+            'has_final_challenge'
+        ],
+    'detail' =>
+        $row[
+            'has_final_challenge'
+        ]
+            ? 'Tersedia'
+            : 'Belum tersedia',
+],
+[
+    'label' => 'Posttest',
+    'completed' =>
+        $row[
+            'posttest_question_count'
+        ] > 0,
+    'detail' =>
+        $row[
+            'posttest_question_count'
+        ] . ' soal',
+],
+];
                         @endphp
 
                         <article
@@ -384,7 +395,7 @@
                                             {{ $row[
                                                 'configured_stage_count'
                                             ] }}
-                                            dari 5 tahap telah dikonfigurasi.
+                                            dari 6 tahap telah dikonfigurasi.
                                         </p>
                                     </div>
 
@@ -412,7 +423,7 @@
                                 </div>
 
                                 <div
-                                    class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5"
+                                    class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3"
                                 >
                                     @foreach ($stages as $stage)
                                         <div
