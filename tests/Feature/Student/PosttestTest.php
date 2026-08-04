@@ -328,6 +328,78 @@ class PosttestTest extends TestCase
      *     2: PosttestOption
      * }
      */
+    /**
+ * Submit Posttest secara langsung ditolak
+ * sebelum Final Challenge diselesaikan.
+ */
+public function test_direct_submission_is_rejected_before_final_challenge_is_completed(): void
+{
+    FinalChallengeAttempt::query()
+        ->where('user_id', $this->student->id)
+        ->where('mission_id', $this->mission->id)
+        ->delete();
+
+    [
+        $question,
+        $correctOption,
+    ] = $this->createQuestion(
+        sequence: 1,
+        questionText: 'Soal Posttest.'
+    );
+
+    $response = $this
+        ->actingAs($this->student)
+        ->post(
+            route(
+                'student.missions.posttest.submit',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            ),
+            [
+                'answers' => [
+                    $question->id =>
+                        $correctOption->id,
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan Final Challenge terlebih dahulu.'
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_attempts',
+        [
+            'id' => $this->posttestAttempt->id,
+            'status' =>
+                PosttestAttempt::STATUS_IN_PROGRESS,
+        ]
+    );
+
+    $this->assertDatabaseCount(
+        'posttest_answers',
+        0
+    );
+
+    $this->assertDatabaseMissing(
+        'mission_completions',
+        [
+            'user_id' => $this->student->id,
+            'mission_id' => $this->mission->id,
+        ]
+    );
+}
     private function createQuestion(
         int $sequence,
         string $questionText
