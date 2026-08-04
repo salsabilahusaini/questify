@@ -73,7 +73,108 @@ class PretestQuestionController extends Controller
             ]
         );
     }
+/**
+ * Menampilkan formulir tambah soal Pretest.
+ */
+public function create(Mission $mission): View
+{
+    $nextSequence = (int) PretestQuestion::query()
+        ->where('mission_id', $mission->id)
+        ->max('sequence') + 1;
 
+    return view(
+        'teacher.missions.pretest.create',
+        [
+            'mission' => $mission,
+            'nextSequence' => $nextSequence,
+        ]
+    );
+}
+/**
+ * Menyimpan soal Pretest baru beserta
+ * empat pilihan jawabannya.
+ */
+public function store(
+    Request $request,
+    Mission $mission
+): RedirectResponse {
+    $validated = $request->validate([
+        'question_text' => [
+            'required',
+            'string',
+            'max:5000',
+        ],
+        'sequence' => [
+            'required',
+            'integer',
+            'min:1',
+        ],
+        'options' => [
+            'required',
+            'array',
+            'size:4',
+        ],
+        'options.*.option_text' => [
+            'required',
+            'string',
+            'max:1000',
+        ],
+        'options.*.sequence' => [
+            'required',
+            'integer',
+            'min:1',
+            'distinct',
+        ],
+        'correct_option_index' => [
+            'required',
+            'integer',
+            'in:0,1,2,3',
+        ],
+    ]);
+
+    DB::transaction(function () use (
+        $request,
+        $mission,
+        $validated
+    ): void {
+        $question = PretestQuestion::create([
+            'mission_id' => $mission->id,
+            'question_text' =>
+                $validated['question_text'],
+            'sequence' => $validated['sequence'],
+            'is_active' =>
+                $request->boolean('is_active'),
+        ]);
+
+        $correctOptionIndex = (int)
+            $validated['correct_option_index'];
+
+        foreach (
+            $validated['options']
+            as $index => $optionData
+        ) {
+            $question->options()->create([
+                'option_text' =>
+                    $optionData['option_text'],
+                'sequence' =>
+                    $optionData['sequence'],
+                'is_correct' =>
+                    (int) $index
+                    === $correctOptionIndex,
+            ]);
+        }
+    });
+
+    return redirect()
+        ->route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Pretest berhasil ditambahkan.'
+        );
+}
     /**
      * Menampilkan formulir edit soal Pretest.
      */
