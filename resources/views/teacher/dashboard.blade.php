@@ -893,7 +893,7 @@ $requiredMaterialBlockCount =
                 <p
                     class="mt-1 text-sm text-neutral-500 dark:text-neutral-400"
                 >
-                    Fitur pengelolaan akan dihubungkan secara bertahap.
+                    Akses pengelolaan misi, monitoring, dan hasil pembelajaran peserta didik.
                 </p>
             </div>
 
