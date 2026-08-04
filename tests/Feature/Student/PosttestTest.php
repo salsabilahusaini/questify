@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Student;
 
+use App\Models\Badge;
 use App\Models\FinalChallengeAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
@@ -214,6 +215,20 @@ class PosttestTest extends TestCase
             questionText: 'Soal ketiga.'
         );
 
+        $missionBadge = Badge::create([
+    'name' => 'Misi Pertama',
+    'slug' => 'posttest-misi-pertama-test',
+    'description' =>
+        'Diperoleh setelah menyelesaikan satu misi.',
+    'icon' => 'flag',
+    'theme' => 'blue',
+    'criteria_type' =>
+        Badge::CRITERIA_MISSIONS_COMPLETED,
+    'criteria_value' => 1,
+    'sequence' => 1,
+    'is_active' => true,
+]);
+
         $answers = [
             $firstQuestion->id =>
                 $firstCorrectOption->id,
@@ -287,6 +302,13 @@ class PosttestTest extends TestCase
                 'earned_xp' => 100,
             ]
         );
+        $this->assertDatabaseHas(
+    'user_badges',
+    [
+        'user_id' => $this->student->id,
+        'badge_id' => $missionBadge->id,
+    ]
+);
 
         /*
          * Mengirim ulang jawaban tidak boleh membuat
@@ -316,6 +338,16 @@ class PosttestTest extends TestCase
             'posttest_answers',
             3
         );
+
+        $awardedBadgeCount = DB::table('user_badges')
+    ->where('user_id', $this->student->id)
+    ->where('badge_id', $missionBadge->id)
+    ->count();
+
+$this->assertSame(
+    1,
+    $awardedBadgeCount
+);
     }
 
     /**
