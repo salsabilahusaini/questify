@@ -189,12 +189,38 @@ Route::get(
     ->middleware('role:teacher')
     ->name('teacher.missions.micro-exercises.edit');
 
+    Route::get(
+    '/teacher/missions/{mission}/micro-exercises/create',
+    [TeacherMicroExerciseQuestionController::class, 'create']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.micro-exercises.create');
+
+Route::post(
+    '/teacher/missions/{mission}/micro-exercises',
+    [TeacherMicroExerciseQuestionController::class, 'store']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.micro-exercises.store');
+
 Route::put(
     '/teacher/missions/{mission}/micro-exercises/{question}',
     [TeacherMicroExerciseQuestionController::class, 'update']
 )
     ->middleware('role:teacher')
     ->name('teacher.missions.micro-exercises.update');
+
+    Route::delete(
+    '/teacher/missions/{mission}/micro-exercises/{question}',
+    [
+        TeacherMicroExerciseQuestionController::class,
+        'destroy',
+    ]
+)
+    ->middleware('role:teacher')
+    ->name(
+        'teacher.missions.micro-exercises.destroy'
+    );
 
     Route::get(
     '/teacher/missions/{mission}/quizzes',

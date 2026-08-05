@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\MaterialBlock;
 use App\Models\MicroExerciseQuestion;
 use App\Models\Mission;
 use Illuminate\Http\RedirectResponse;
@@ -110,7 +111,224 @@ class MicroExerciseQuestionController extends Controller
             ]
         );
     }
+    /**
+ * Menampilkan formulir tambah soal
+ * Latihan Mikro.
+ */
+public function create(Mission $mission): View
+{
+    $materialBlocks = MaterialBlock::query()
+        ->whereHas(
+            'materialSection',
+            function ($query) use ($mission): void {
+                $query->where(
+                    'mission_id',
+                    $mission->id
+                );
+            }
+        )
+        ->with([
+            'materialSection:id,mission_id,title,sequence',
+            'microExerciseQuestions:id,material_block_id,sequence',
+        ])
+        ->get()
+        ->sortBy(
+            function (MaterialBlock $block): string {
+                $sectionSequence = (int) (
+                    $block
+                        ->materialSection
+                        ?->sequence ?? 0
+                );
 
+                return sprintf(
+                    '%06d-%06d',
+                    $sectionSequence,
+                    $block->sequence
+                );
+            }
+        )
+        ->values();
+
+    $nextSequenceByBlock = $materialBlocks
+        ->mapWithKeys(
+            function (MaterialBlock $block): array {
+                $highestSequence = (int)
+                    $block
+                        ->microExerciseQuestions
+                        ->max('sequence');
+
+                return [
+                    $block->id =>
+                        $highestSequence + 1,
+                ];
+            }
+        );
+
+    return view(
+        'teacher.missions.micro-exercises.create',
+        [
+            'mission' => $mission,
+            'materialBlocks' => $materialBlocks,
+            'nextSequenceByBlock' =>
+                $nextSequenceByBlock,
+        ]
+    );
+}
+/**
+ * Menyimpan soal Latihan Mikro baru beserta
+ * empat pilihan jawabannya.
+ */
+public function store(
+    Request $request,
+    Mission $mission
+): RedirectResponse {
+    $validated = $request->validate([
+        'material_block_id' => [
+            'required',
+            'integer',
+            'exists:material_blocks,id',
+        ],
+        'question_text' => [
+            'required',
+            'string',
+            'max:5000',
+        ],
+        'sequence' => [
+            'required',
+            'integer',
+            'min:1',
+            Rule::unique(
+                'micro_exercise_questions',
+                'sequence'
+            )->where(
+                fn ($query) => $query->where(
+                    'material_block_id',
+                    $request->input(
+                        'material_block_id'
+                    )
+                )
+            ),
+        ],
+        'points' => [
+            'required',
+            'integer',
+            'min:0',
+            'max:10000',
+        ],
+        'correct_feedback' => [
+            'nullable',
+            'string',
+            'max:2000',
+        ],
+        'incorrect_feedback' => [
+            'nullable',
+            'string',
+            'max:2000',
+        ],
+        'options' => [
+            'required',
+            'array',
+            'size:4',
+        ],
+        'options.*.option_text' => [
+            'required',
+            'string',
+            'max:1000',
+        ],
+        'options.*.sequence' => [
+            'required',
+            'integer',
+            'min:1',
+            'distinct',
+        ],
+        'correct_option_index' => [
+            'required',
+            'integer',
+            'in:0,1,2,3',
+        ],
+    ]);
+
+    /*
+     * Memastikan blok materi benar-benar
+     * berasal dari misi yang sedang dikelola.
+     */
+    $materialBlock = MaterialBlock::query()
+        ->whereKey(
+            $validated['material_block_id']
+        )
+        ->whereHas(
+            'materialSection',
+            function ($query) use ($mission): void {
+                $query->where(
+                    'mission_id',
+                    $mission->id
+                );
+            }
+        )
+        ->first();
+
+    if ($materialBlock === null) {
+        throw ValidationException::withMessages([
+            'material_block_id' =>
+                'Blok materi tidak valid untuk misi ini.',
+        ]);
+    }
+
+    DB::transaction(function () use (
+        $request,
+        $materialBlock,
+        $validated
+    ): void {
+        $question = MicroExerciseQuestion::create([
+            'material_block_id' =>
+                $materialBlock->id,
+            'type' =>
+                MicroExerciseQuestion::TYPE_MULTIPLE_CHOICE,
+            'question_text' =>
+                $validated['question_text'],
+            'sequence' =>
+                $validated['sequence'],
+            'points' =>
+                $validated['points'],
+            'correct_feedback' =>
+                $validated['correct_feedback']
+                ?? null,
+            'incorrect_feedback' =>
+                $validated['incorrect_feedback']
+                ?? null,
+            'is_active' =>
+                $request->boolean('is_active'),
+        ]);
+
+        $correctOptionIndex = (int)
+            $validated['correct_option_index'];
+
+        foreach (
+            $validated['options']
+            as $index => $optionData
+        ) {
+            $question->options()->create([
+                'option_text' =>
+                    $optionData['option_text'],
+                'sequence' =>
+                    $optionData['sequence'],
+                'is_correct' =>
+                    (int) $index
+                    === $correctOptionIndex,
+            ]);
+        }
+    });
+
+    return redirect()
+        ->route(
+            'teacher.missions.micro-exercises.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Latihan Mikro berhasil ditambahkan.'
+        );
+}
     /**
      * Menampilkan formulir edit soal
      * Latihan Mikro.
@@ -311,7 +529,52 @@ class MicroExerciseQuestionController extends Controller
                 'Soal Latihan Mikro berhasil diperbarui.'
             );
     }
+    /**
+ * Menghapus soal Latihan Mikro yang belum pernah
+ * digunakan dalam jawaban peserta didik.
+ */
+public function destroy(
+    Mission $mission,
+    MicroExerciseQuestion $question
+): RedirectResponse {
+    $this->ensureQuestionBelongsToMission(
+        $mission,
+        $question
+    );
 
+    $hasStudentAnswers = DB::table(
+        'micro_exercise_answers'
+    )
+        ->where(
+            'micro_exercise_question_id',
+            $question->id
+        )
+        ->exists();
+
+    if ($hasStudentAnswers) {
+        return redirect()
+            ->route(
+                'teacher.missions.micro-exercises.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Soal Latihan Mikro tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+            );
+    }
+
+    $question->delete();
+
+    return redirect()
+        ->route(
+            'teacher.missions.micro-exercises.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Latihan Mikro berhasil dihapus.'
+        );
+}
     /**
      * Memastikan soal Latihan Mikro berasal
      * dari misi yang sedang dikelola.

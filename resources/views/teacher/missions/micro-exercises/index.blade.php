@@ -62,16 +62,29 @@
                         </p>
                     </div>
 
-                    <a
-                        href="{{ route(
-                            'teacher.missions.show',
-                            $mission
-                        ) }}"
-                        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-                    >
-                        <span>←</span>
-                        Kembali ke Detail Misi
-                    </a>
+                   <div class="flex flex-wrap items-center gap-3">
+    <a
+        href="{{ route(
+            'teacher.missions.micro-exercises.create',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+    >
+        <span>+</span>
+        Tambah Soal
+    </a>
+
+    <a
+        href="{{ route(
+            'teacher.missions.show',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+    >
+        <span>←</span>
+        Kembali ke Detail Misi
+    </a>
+</div>
                 </div>
             </div>
         </section>
@@ -83,6 +96,13 @@
                 ✓ {{ session('success') }}
             </section>
         @endif
+        @if (session('error'))
+    <section
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+    >
+        ✕ {{ session('error') }}
+    </section>
+@endif
 
         {{-- Ringkasan --}}
         <section
@@ -311,6 +331,30 @@
                                         Edit Soal
                                         <span>✎</span>
                                     </a>
+                                    <form
+    method="POST"
+    action="{{ route(
+        'teacher.missions.micro-exercises.destroy',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    ) }}"
+    onsubmit="return confirm(
+        'Yakin ingin menghapus soal Latihan Mikro ini? Soal yang sudah memiliki jawaban peserta didik tidak dapat dihapus.'
+    )"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-700 shadow-sm transition hover:bg-red-100"
+    >
+        Hapus Soal
+        <span>🗑</span>
+    </button>
+</form>
                                 </div>
                             </div>
 
