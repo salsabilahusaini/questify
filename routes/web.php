@@ -203,6 +203,20 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.quizzes.index');
 
+    Route::get(
+    '/teacher/missions/{mission}/quizzes/create',
+    [TeacherQuizQuestionController::class, 'create']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.quizzes.create');
+
+Route::post(
+    '/teacher/missions/{mission}/quizzes',
+    [TeacherQuizQuestionController::class, 'store']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.quizzes.store');
+
 Route::get(
     '/teacher/missions/{mission}/quizzes/{question}/edit',
     [TeacherQuizQuestionController::class, 'edit']

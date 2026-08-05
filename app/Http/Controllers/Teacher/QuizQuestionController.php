@@ -79,7 +79,136 @@ class QuizQuestionController extends Controller
             ]
         );
     }
+/**
+ * Menampilkan formulir tambah soal Kuis Materi.
+ */
+public function create(Mission $mission): View
+{
+    $nextSequence = (int) QuizQuestion::query()
+        ->where('mission_id', $mission->id)
+        ->max('sequence') + 1;
 
+    return view(
+        'teacher.missions.quizzes.create',
+        [
+            'mission' => $mission,
+            'nextSequence' => $nextSequence,
+        ]
+    );
+}
+
+/**
+ * Menyimpan soal Kuis Materi baru beserta
+ * empat pilihan jawabannya.
+ */
+public function store(
+    Request $request,
+    Mission $mission
+): RedirectResponse {
+    $validated = $request->validate([
+        'question_text' => [
+            'required',
+            'string',
+            'max:5000',
+        ],
+        'sequence' => [
+            'required',
+            'integer',
+            'min:1',
+            Rule::unique(
+                'quiz_questions',
+                'sequence'
+            )->where(
+                fn ($query) => $query->where(
+                    'mission_id',
+                    $mission->id
+                )
+            ),
+        ],
+        'points' => [
+            'required',
+            'integer',
+            'min:0',
+            'max:10000',
+        ],
+        'explanation' => [
+            'nullable',
+            'string',
+            'max:3000',
+        ],
+        'options' => [
+            'required',
+            'array',
+            'size:4',
+        ],
+        'options.*.option_text' => [
+            'required',
+            'string',
+            'max:1000',
+        ],
+        'options.*.sequence' => [
+            'required',
+            'integer',
+            'min:1',
+            'distinct',
+        ],
+        'correct_option_index' => [
+            'required',
+            'integer',
+            'in:0,1,2,3',
+        ],
+    ]);
+
+    DB::transaction(function () use (
+        $request,
+        $mission,
+        $validated
+    ): void {
+        $question = QuizQuestion::create([
+            'mission_id' => $mission->id,
+            'type' =>
+                QuizQuestion::TYPE_MULTIPLE_CHOICE,
+            'question_text' =>
+                $validated['question_text'],
+            'sequence' =>
+                $validated['sequence'],
+            'points' =>
+                $validated['points'],
+            'explanation' =>
+                $validated['explanation'] ?? null,
+            'is_active' =>
+                $request->boolean('is_active'),
+        ]);
+
+        $correctOptionIndex = (int)
+            $validated['correct_option_index'];
+
+        foreach (
+            $validated['options']
+            as $index => $optionData
+        ) {
+            $question->options()->create([
+                'option_text' =>
+                    $optionData['option_text'],
+                'sequence' =>
+                    $optionData['sequence'],
+                'is_correct' =>
+                    (int) $index
+                    === $correctOptionIndex,
+            ]);
+        }
+    });
+
+    return redirect()
+        ->route(
+            'teacher.missions.quizzes.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Kuis Materi berhasil ditambahkan.'
+        );
+}
     /**
      * Menampilkan formulir edit soal Kuis Materi.
      */

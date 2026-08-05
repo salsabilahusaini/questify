@@ -15,7 +15,7 @@
             $totalPointCount ?? 0;
 
         $totalOptionCount =
-            $totalOptionCount ?? 0;
+    $totalOptionCount ?? 0;
 
         $optionLabels = [
             1 => 'A',
@@ -62,16 +62,29 @@
                         </p>
                     </div>
 
-                    <a
-                        href="{{ route(
-                            'teacher.missions.show',
-                            $mission
-                        ) }}"
-                        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
-                    >
-                        <span>←</span>
-                        Kembali ke Detail Misi
-                    </a>
+                    <div class="flex flex-wrap items-center gap-3">
+    <a
+        href="{{ route(
+            'teacher.missions.quizzes.create',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-violet-700"
+    >
+        <span>＋</span>
+        Tambah Soal
+    </a>
+
+    <a
+        href="{{ route(
+            'teacher.missions.show',
+            $mission
+        ) }}"
+        class="inline-flex w-fit items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm transition hover:bg-neutral-50"
+    >
+        <span>←</span>
+        Kembali ke Detail Misi
+    </a>
+</div>
                 </div>
             </div>
         </section>
