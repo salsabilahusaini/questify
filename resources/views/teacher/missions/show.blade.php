@@ -597,7 +597,19 @@
             Nonaktif
         </span>
     @endif
-
+<a
+    href="{{ route(
+        'teacher.missions.material-blocks.create',
+        [
+            'mission' => $mission,
+            'section' => $section,
+        ]
+    ) }}"
+    class="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
+>
+    Tambah Blok
+    <span>+</span>
+</a>
     <a
         href="{{ route(
             'teacher.missions.material-sections.edit',

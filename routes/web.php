@@ -106,6 +106,30 @@ Route::put(
     ->name('teacher.missions.update');
 
     Route::get(
+    '/teacher/missions/{mission}/material-sections/{section}/material-blocks/create',
+    [
+        TeacherMaterialBlockController::class,
+        'create',
+    ]
+)
+    ->middleware('role:teacher')
+    ->name(
+        'teacher.missions.material-blocks.create'
+    );
+
+    Route::post(
+    '/teacher/missions/{mission}/material-sections/{section}/material-blocks',
+    [
+        TeacherMaterialBlockController::class,
+        'store',
+    ]
+)
+    ->middleware('role:teacher')
+    ->name(
+        'teacher.missions.material-blocks.store'
+    );
+
+    Route::get(
     '/teacher/missions/{mission}/material-blocks/{block}/edit',
     [TeacherMaterialBlockController::class, 'edit']
 )
