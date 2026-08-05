@@ -97,6 +97,13 @@
         ✓ {{ session('success') }}
     </section>
 @endif
+@if (session('error'))
+    <section
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+    >
+        ✕ {{ session('error') }}
+    </section>
+@endif
 
         {{-- Informasi utama misi --}}
         <section class="quest-card p-6">
@@ -726,6 +733,30 @@
         Edit Blok
         <span>✎</span>
     </a>
+    <form
+    method="POST"
+    action="{{ route(
+        'teacher.missions.material-blocks.destroy',
+        [
+            'mission' => $mission,
+            'block' => $block,
+        ]
+    ) }}"
+    onsubmit="return confirm(
+        'Yakin ingin menghapus blok materi ini? Blok yang sudah memiliki aktivitas atau jawaban peserta didik tidak dapat dihapus.'
+    )"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700 shadow-sm transition hover:bg-red-100"
+    >
+        Hapus Blok
+        <span>🗑</span>
+    </button>
+</form>
 </div>
                                             </div>
 

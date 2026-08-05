@@ -143,6 +143,18 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.material-blocks.update');
 
+    Route::delete(
+    '/teacher/missions/{mission}/material-blocks/{block}',
+    [
+        TeacherMaterialBlockController::class,
+        'destroy',
+    ]
+)
+    ->middleware('role:teacher')
+    ->name(
+        'teacher.missions.material-blocks.destroy'
+    );
+
     Route::get(
     '/teacher/missions/{mission}/material-sections/create',
     [

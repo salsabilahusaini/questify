@@ -8,6 +8,7 @@ use App\Models\MaterialSection;
 use App\Models\Mission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -273,6 +274,92 @@ public function store(
                 'Blok materi berhasil diperbarui.'
             );
     }
+    /**
+ * Menghapus blok materi yang belum memiliki
+ * riwayat aktivitas peserta didik.
+ */
+public function destroy(
+    Mission $mission,
+    MaterialBlock $block
+): RedirectResponse {
+    $this->ensureBlockBelongsToMission(
+        $mission,
+        $block
+    );
+
+    /*
+     * Riwayat waktu baca, jumlah kunjungan,
+     * dan penyelesaian blok harus dilindungi.
+     */
+    $hasStudentProgress = DB::table(
+        'material_block_progresses'
+    )
+        ->where(
+            'material_block_id',
+            $block->id
+        )
+        ->exists();
+
+    if ($hasStudentProgress) {
+        return redirect()
+            ->route(
+                'teacher.missions.show',
+                $mission
+            )
+            ->with(
+                'error',
+                'Blok materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+            );
+    }
+
+    /*
+     * Jawaban dan poin Latihan Mikro yang berada
+     * pada blok ini juga harus tetap terlindungi.
+     */
+    $hasMicroExerciseAnswers = DB::table(
+        'micro_exercise_answers'
+    )
+        ->join(
+            'micro_exercise_questions',
+            'micro_exercise_questions.id',
+            '=',
+            'micro_exercise_answers.micro_exercise_question_id'
+        )
+        ->where(
+            'micro_exercise_questions.material_block_id',
+            $block->id
+        )
+        ->exists();
+
+    if ($hasMicroExerciseAnswers) {
+        return redirect()
+            ->route(
+                'teacher.missions.show',
+                $mission
+            )
+            ->with(
+                'error',
+                'Blok materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+            );
+    }
+
+    /*
+     * Jika belum memiliki riwayat siswa, blok dapat
+     * dihapus. Soal Latihan Mikro yang belum dijawab
+     * ikut terhapus melalui aturan cascade database.
+     */
+    $block->delete();
+
+    return redirect()
+        ->route(
+            'teacher.missions.show',
+            $mission
+        )
+        ->with(
+            'success',
+            'Blok materi berhasil dihapus.'
+        );
+}
 
     /**
      * Memastikan blok benar-benar berasal dari misi
