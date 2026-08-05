@@ -97,6 +97,14 @@
             </section>
         @endif
 
+        @if (session('error'))
+    <section
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+    >
+        ! {{ session('error') }}
+    </section>
+@endif
+
         {{-- Ringkasan --}}
         <section
             class="grid gap-4 md:grid-cols-2 xl:grid-cols-5"
@@ -290,6 +298,31 @@
                                         class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
                                     >
                                         Edit Soal
+
+                                        <form
+    method="POST"
+    action="{{ route(
+        'teacher.missions.quizzes.destroy',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    ) }}"
+    onsubmit="return confirm(
+        'Yakin ingin menghapus soal Kuis Materi ini? Soal yang sudah memiliki jawaban peserta didik tidak dapat dihapus.'
+    );"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700"
+    >
+        Hapus Soal
+        <span>⌫</span>
+    </button>
+</form>
                                         <span>✎</span>
                                     </a>
                                 </div>

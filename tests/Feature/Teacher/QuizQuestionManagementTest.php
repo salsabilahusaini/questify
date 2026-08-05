@@ -3,6 +3,8 @@
 namespace Tests\Feature\Teacher;
 
 use App\Models\Mission;
+use App\Models\QuizAnswer;
+use App\Models\QuizAttempt;
 use App\Models\QuizOption;
 use App\Models\QuizQuestion;
 use App\Models\User;
@@ -203,6 +205,151 @@ class QuizQuestionManagementTest extends TestCase
             ]
         );
     }
+
+    /**
+ * Guru dapat menghapus soal Kuis Materi yang belum
+ * pernah memiliki jawaban peserta didik.
+ */
+public function test_teacher_can_delete_unused_quiz_question(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.quizzes.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.quizzes.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'success',
+        'Soal Kuis Materi berhasil dihapus.'
+    );
+
+    $this->assertDatabaseMissing(
+        'quiz_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    foreach ($options as $option) {
+        $this->assertDatabaseMissing(
+            'quiz_options',
+            [
+                'id' => $option->id,
+            ]
+        );
+    }
+}
+
+/**
+ * Soal Kuis Materi yang sudah memiliki jawaban
+ * peserta didik tidak boleh dihapus.
+ */
+public function test_teacher_cannot_delete_answered_quiz_question(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $attempt = QuizAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            QuizAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(5),
+        'completed_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 1,
+        'score' => 100,
+        'earned_points' => 20,
+    ]);
+
+    QuizAnswer::create([
+        'quiz_attempt_id' => $attempt->id,
+        'quiz_question_id' => $question->id,
+        'selected_option_id' => $options[0]->id,
+        'is_correct' => true,
+        'awarded_points' => 20,
+        'answered_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.quizzes.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.quizzes.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Kuis Materi tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+    );
+
+    $this->assertDatabaseHas(
+        'quiz_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'quiz_answers',
+        [
+            'quiz_attempt_id' => $attempt->id,
+            'quiz_question_id' => $question->id,
+            'selected_option_id' => $options[0]->id,
+            'awarded_points' => 20,
+        ]
+    );
+}
 
     /**
      * Membuat akun guru untuk pengujian.

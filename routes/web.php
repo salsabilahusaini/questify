@@ -231,6 +231,13 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.quizzes.update');
 
+    Route::delete(
+    '/teacher/missions/{mission}/quizzes/{question}',
+    [TeacherQuizQuestionController::class, 'destroy']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.quizzes.destroy');
+
     Route::get(
     '/teacher/missions/{mission}/final-challenge',
     [TeacherFinalChallengeController::class, 'index']

@@ -391,6 +391,52 @@ public function store(
                 'Soal Kuis Materi berhasil diperbarui.'
             );
     }
+    /**
+ * Menghapus soal Kuis Materi yang belum pernah
+ * digunakan dalam jawaban peserta didik.
+ */
+public function destroy(
+    Mission $mission,
+    QuizQuestion $question
+): RedirectResponse {
+    $this->ensureQuestionBelongsToMission(
+        $mission,
+        $question
+    );
+
+    $hasStudentAnswers = DB::table(
+        'quiz_answers'
+    )
+        ->where(
+            'quiz_question_id',
+            $question->id
+        )
+        ->exists();
+
+    if ($hasStudentAnswers) {
+        return redirect()
+            ->route(
+                'teacher.missions.quizzes.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Soal Kuis Materi tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
+            );
+    }
+
+    $question->delete();
+
+    return redirect()
+        ->route(
+            'teacher.missions.quizzes.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Soal Kuis Materi berhasil dihapus.'
+        );
+}
 
     /**
      * Memastikan soal Kuis Materi berasal
