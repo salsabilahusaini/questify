@@ -525,6 +525,18 @@
                 Rincian materi aktif, waktu baca minimum,
                 kewajiban blok, dan jumlah Latihan Mikro.
             </p>
+            <div class="mt-5 flex justify-end">
+    <a
+        href="{{ route(
+            'teacher.missions.material-sections.create',
+            $mission
+        ) }}"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+    >
+        Tambah Bagian Materi
+        <span>+</span>
+    </a>
+</div>
 
             @if ($mission->materialSections->isEmpty())
                 <div
