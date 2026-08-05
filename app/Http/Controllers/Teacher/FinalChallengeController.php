@@ -56,6 +56,115 @@ class FinalChallengeController extends Controller
             ]
         );
     }
+    /**
+ * Menampilkan formulir tambah Final Challenge.
+ */
+public function create(
+    Mission $mission
+): View|RedirectResponse {
+    /*
+     * Setiap misi hanya boleh mempunyai
+     * satu Final Challenge.
+     */
+    if ($mission->finalChallenge()->exists()) {
+        return redirect()
+            ->route(
+                'teacher.missions.final-challenge.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Misi ini sudah memiliki Final Challenge. Gunakan menu Edit Final Challenge untuk mengubahnya.'
+            );
+    }
+
+    return view(
+        'teacher.missions.final-challenge.create',
+        [
+            'mission' => $mission,
+        ]
+    );
+}
+/**
+ * Menyimpan Final Challenge baru pada misi.
+ */
+public function store(
+    Request $request,
+    Mission $mission
+): RedirectResponse {
+    /*
+     * Setiap misi hanya boleh mempunyai
+     * satu Final Challenge.
+     */
+    if ($mission->finalChallenge()->exists()) {
+        return redirect()
+            ->route(
+                'teacher.missions.final-challenge.index',
+                $mission
+            )
+            ->with(
+                'error',
+                'Misi ini sudah memiliki Final Challenge. Gunakan menu Edit Final Challenge untuk mengubahnya.'
+            );
+    }
+
+    $validated = $request->validate([
+        'title' => [
+            'required',
+            'string',
+            'max:255',
+        ],
+        'scenario' => [
+            'required',
+            'string',
+            'max:10000',
+        ],
+        'instructions' => [
+            'required',
+            'string',
+            'max:10000',
+        ],
+        'starter_code' => [
+            'nullable',
+            'string',
+            'max:20000',
+        ],
+        'expected_output' => [
+            'nullable',
+            'string',
+            'max:10000',
+        ],
+        'max_points' => [
+            'required',
+            'integer',
+            'min:0',
+            'max:10000',
+        ],
+    ]);
+
+    $mission->finalChallenge()->create([
+        'title' => $validated['title'],
+        'scenario' => $validated['scenario'],
+        'instructions' => $validated['instructions'],
+        'starter_code' =>
+            $validated['starter_code'] ?? null,
+        'expected_output' =>
+            $validated['expected_output'] ?? null,
+        'max_points' => $validated['max_points'],
+        'is_active' =>
+            $request->boolean('is_active'),
+    ]);
+
+    return redirect()
+        ->route(
+            'teacher.missions.final-challenge.index',
+            $mission
+        )
+        ->with(
+            'success',
+            'Final Challenge berhasil ditambahkan.'
+        );
+}
 
     /**
      * Menampilkan formulir edit Final Challenge.

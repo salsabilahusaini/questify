@@ -271,6 +271,20 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.final-challenge.index');
 
+    Route::get(
+    '/teacher/missions/{mission}/final-challenge/create',
+    [TeacherFinalChallengeController::class, 'create']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.final-challenge.create');
+
+    Route::post(
+    '/teacher/missions/{mission}/final-challenge',
+    [TeacherFinalChallengeController::class, 'store']
+)
+    ->middleware('role:teacher')
+    ->name('teacher.missions.final-challenge.store');
+
 Route::get(
     '/teacher/missions/{mission}/final-challenge/{finalChallenge}/edit',
     [TeacherFinalChallengeController::class, 'edit']

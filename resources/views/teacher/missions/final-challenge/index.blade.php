@@ -72,6 +72,13 @@
                 ✓ {{ session('success') }}
             </section>
         @endif
+        @if (session('error'))
+    <section
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700"
+    >
+        ✕ {{ session('error') }}
+    </section>
+@endif
 
         @if ($challenge === null)
             <section class="quest-card p-10 text-center">
@@ -93,6 +100,16 @@
                     Misi ini belum mempunyai Final Challenge
                     yang dapat dikelola.
                 </p>
+                <a
+    href="{{ route(
+        'teacher.missions.final-challenge.create',
+        $mission
+    ) }}"
+    class="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600"
+>
+    Tambah Final Challenge
+    <span>+</span>
+</a>
             </section>
         @else
             {{-- Ringkasan --}}
