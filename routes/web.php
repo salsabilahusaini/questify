@@ -193,6 +193,18 @@ Route::put(
     ->middleware('role:teacher')
     ->name('teacher.missions.material-sections.update');
 
+    Route::delete(
+    '/teacher/missions/{mission}/material-sections/{section}',
+    [
+        TeacherMaterialSectionController::class,
+        'destroy',
+    ]
+)
+    ->middleware('role:teacher')
+    ->name(
+        'teacher.missions.material-sections.destroy'
+    );
+
     Route::get(
     '/teacher/missions/{mission}/pretest',
     [TeacherPretestQuestionController::class, 'index']

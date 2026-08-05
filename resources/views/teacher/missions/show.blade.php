@@ -630,6 +630,30 @@
         Edit Bagian
         <span>✎</span>
     </a>
+    <form
+    method="POST"
+    action="{{ route(
+        'teacher.missions.material-sections.destroy',
+        [
+            'mission' => $mission,
+            'section' => $section,
+        ]
+    ) }}"
+    onsubmit="return confirm(
+        'Yakin ingin menghapus bagian materi ini? Seluruh blok dan soal yang belum memiliki aktivitas peserta didik akan ikut terhapus.'
+    )"
+>
+    @csrf
+    @method('DELETE')
+
+    <button
+        type="submit"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-bold text-red-700 shadow-sm transition hover:bg-red-100"
+    >
+        Hapus Bagian
+        <span>🗑</span>
+    </button>
+</form>
 </div>
                             </div>
 
