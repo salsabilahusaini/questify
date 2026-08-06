@@ -27,7 +27,15 @@ class ProgressController extends Controller
 
         $totalXp = (int) $completions->sum('earned_xp');
 
-        $completedMissions = $completions->count();
+        $completedMissions = MissionCompletion::query()
+    ->where('user_id', $user->id)
+    ->whereHas(
+        'mission',
+        function ($query): void {
+            $query->where('is_published', true);
+        }
+    )
+    ->count();
 
         $totalPublishedMissions = Mission::query()
             ->where('is_published', true)
