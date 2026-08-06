@@ -113,7 +113,14 @@
                                     </p>
 
                                     <div class="mt-3 flex flex-wrap gap-2">
-                                        @foreach (['Pretest', 'Materi', 'Latihan Mikro', 'Kuis', 'Final Challenge'] as $step)
+                                       @foreach ([
+    'Pretest',
+    'Materi',
+    'Latihan Mikro',
+    'Kuis',
+    'Final Challenge',
+    'Posttest',
+] as $step)
                                             <span class="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
                                                 <span class="size-1.5 rounded-full bg-violet-500"></span>
                                                 {{ $step }}
@@ -150,19 +157,34 @@
                                     </p>
 
                                     <div class="mt-2 flex items-end justify-between">
-                                        <p class="text-3xl font-bold text-neutral-950 dark:text-white">
-                                            0%
-                                        </p>
+    <p class="text-3xl font-bold text-neutral-950 dark:text-white">
+        {{ $mission->progress_percentage }}%
+    </p>
 
-                                        <span class="text-xs font-medium text-neutral-400">
-                                            Belum dimulai
-                                        </span>
-                                    </div>
+    <span class="text-xs font-medium text-neutral-400">
+        {{ $mission->progress_label }}
+    </span>
+</div>
 
-                                    <div class="mt-3 h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
-                                        <div class="h-full w-0 rounded-full bg-gradient-to-r from-blue-500 to-violet-500"></div>
-                                    </div>
-                                </div>
+<div
+    class="mt-3 h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700"
+    role="progressbar"
+    aria-valuenow="{{ $mission->progress_percentage }}"
+    aria-valuemin="0"
+    aria-valuemax="100"
+>
+    <div
+        class="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-500"
+        style="width: {{ $mission->progress_percentage }}%;"
+    ></div>
+</div>
+
+<p class="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+    {{ $mission->completed_steps }}
+    dari
+    {{ $mission->total_steps }}
+    tahap selesai
+</p>
 
                                 <div class="mt-6 border-t border-neutral-200 pt-5 dark:border-neutral-700">
                                     <p class="text-xs font-semibold uppercase tracking-wide text-neutral-400">
