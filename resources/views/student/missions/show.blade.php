@@ -61,13 +61,24 @@
     } }}
 </p>
 
-@if ($step['status'] === 'available' && ! empty($step['url']))
+@if (
+    in_array(
+        $step['status'],
+        ['available', 'completed'],
+        true
+    )
+    && ! empty($step['url'])
+)
     <a
         href="{{ $step['url'] }}"
         class="quest-button-primary mt-4 inline-flex"
         wire:navigate
     >
-        Buka {{ $step['title'] }}
+        {{ $step['status'] === 'completed'
+            ? 'Lihat Kembali'
+            : 'Buka' }}
+
+        {{ $step['title'] }}
     </a>
 @endif
                             </div>
