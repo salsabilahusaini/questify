@@ -47,27 +47,48 @@ public function start(Request $request, Mission $mission): RedirectResponse
 {
     abort_unless($mission->is_published, 404);
 
-    $questionCount = $mission->pretestQuestions()
-        ->where('is_active', true)
-        ->count();
+    $questionIds = $mission->pretestQuestions()
+    ->where('is_active', true)
+    ->pluck('id');
 
-    abort_if(
-        $questionCount === 0,
-        404,
-        'Soal Pretest belum tersedia.'
-    );
+abort_if(
+    $questionIds->isEmpty(),
+    404,
+    'Soal Pretest belum tersedia.'
+);
 
-    $attempt = $mission->pretestAttempts()->firstOrCreate(
-        [
-            'user_id' => $request->user()->id,
-        ],
-        [
-    'status' => PretestAttempt::STATUS_IN_PROGRESS,
-    'started_at' => now(),
-    'total_questions' => $questionCount,
-    'correct_answers' => 0,
-]
-    );
+$attempt = $mission->pretestAttempts()->firstOrCreate(
+    [
+        'user_id' => $request->user()->id,
+    ],
+    [
+        'status' => PretestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => $questionIds->count(),
+        'correct_answers' => 0,
+        'question_order' => $questionIds
+            ->shuffle()
+            ->values()
+            ->all(),
+    ]
+);
+
+/*
+ * Attempt lama yang masih berlangsung mungkin belum
+ * memiliki urutan soal karena dibuat sebelum fitur acak.
+ */
+if (
+    $attempt->status === PretestAttempt::STATUS_IN_PROGRESS
+    && empty($attempt->question_order)
+) {
+    $attempt->update([
+        'total_questions' => $questionIds->count(),
+        'question_order' => $questionIds
+            ->shuffle()
+            ->values()
+            ->all(),
+    ]);
+}
 
     return redirect()->route(
     'student.missions.pretest.show',
@@ -109,28 +130,67 @@ public function questions(
         );
     }
 
-    $questions = $mission->pretestQuestions()
-    ->where('is_active', true)
+    $questionOrder = collect($attempt->question_order)
+    ->map(
+        fn ($questionId): int => (int) $questionId
+    )
+    ->values();
+
+/*
+ * Menangani attempt lama yang dibuat sebelum
+ * kolom question_order tersedia.
+ */
+if ($questionOrder->isEmpty()) {
+    $questionOrder = $mission->pretestQuestions()
+        ->where('is_active', true)
+        ->pluck('id')
+        ->shuffle()
+        ->values();
+
+    abort_if(
+        $questionOrder->isEmpty(),
+        404,
+        'Soal Pretest belum tersedia.'
+    );
+
+    $attempt->update([
+        'total_questions' => $questionOrder->count(),
+        'question_order' => $questionOrder->all(),
+    ]);
+}
+
+$questions = $mission->pretestQuestions()
+    ->whereIn('id', $questionOrder->all())
     ->select([
         'id',
         'mission_id',
         'question_text',
         'sequence',
     ])
-    ->orderBy('sequence')
     ->with([
-            'options' => function ($query) {
-                $query
-                    ->select([
-                        'id',
-                        'pretest_question_id',
-                        'option_text',
-                        'sequence',
-                    ])
-                    ->orderBy('sequence');
-            },
-        ])
-        ->get();
+        'options' => function ($query): void {
+            $query
+                ->select([
+                    'id',
+                    'pretest_question_id',
+                    'option_text',
+                    'sequence',
+                ])
+                ->orderBy('sequence');
+        },
+    ])
+    ->get();
+
+$orderPositions = $questionOrder->flip();
+
+$questions = $questions
+    ->sortBy(
+        fn ($question): int => (int) $orderPositions->get(
+            $question->id,
+            PHP_INT_MAX
+        )
+    )
+    ->values();
 
     abort_if(
         $questions->isEmpty(),

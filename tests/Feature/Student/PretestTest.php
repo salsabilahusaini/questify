@@ -52,39 +52,51 @@ class PretestTest extends TestCase
     }
 
     /**
-     * Beberapa soal Pretest ditampilkan
-     * berdasarkan urutan sequence.
+ * Soal Pretest ditampilkan berdasarkan urutan
+ * yang tersimpan pada attempt siswa.
+ */
+public function test_pretest_questions_follow_saved_question_order(): void
+{
+    [$firstQuestion] = $this->createQuestion(
+        sequence: 1,
+        questionText: 'Pertanyaan pertama tentang perulangan.'
+    );
+
+    [$secondQuestion] = $this->createQuestion(
+        sequence: 2,
+        questionText: 'Pertanyaan kedua tentang perulangan.'
+    );
+
+    /*
+     * Urutan sengaja dibuat berbeda dari sequence
+     * untuk memastikan controller memakai question_order.
      */
-    public function test_pretest_questions_are_displayed_in_sequence(): void
-    {
-        $this->createQuestion(
-            sequence: 2,
-            questionText: 'Pertanyaan kedua tentang perulangan.'
+    $this->pretestAttempt->update([
+        'total_questions' => 2,
+        'question_order' => [
+            $secondQuestion->id,
+            $firstQuestion->id,
+        ],
+    ]);
+
+    $response = $this
+        ->actingAs($this->student)
+        ->get(
+            route(
+                'student.missions.pretest.questions',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
         );
 
-        $this->createQuestion(
-            sequence: 1,
-            questionText: 'Pertanyaan pertama tentang perulangan.'
-        );
+    $response->assertOk();
 
-        $response = $this
-            ->actingAs($this->student)
-            ->get(
-                route(
-                    'student.missions.pretest.questions',
-                    [
-                        'mission' => $this->mission->slug,
-                    ]
-                )
-            );
-
-        $response->assertOk();
-
-        $response->assertSeeInOrder([
-            'Pertanyaan pertama tentang perulangan.',
-            'Pertanyaan kedua tentang perulangan.',
-        ]);
-    }
+    $response->assertSeeInOrder([
+        'Pertanyaan kedua tentang perulangan.',
+        'Pertanyaan pertama tentang perulangan.',
+    ]);
+}
 
     /**
      * Siswa wajib menjawab seluruh soal

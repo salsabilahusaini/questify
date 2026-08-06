@@ -13,26 +13,28 @@ class PretestAttempt extends Model
     public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
-        'user_id',
-        'mission_id',
-        'status',
-        'started_at',
-        'completed_at',
-        'total_questions',
-        'correct_answers',
-        'score',
-    ];
+    'user_id',
+    'mission_id',
+    'status',
+    'started_at',
+    'completed_at',
+    'total_questions',
+    'correct_answers',
+    'score',
+    'question_order',
+];
 
     protected function casts(): array
-    {
-        return [
-            'started_at' => 'datetime',
-            'completed_at' => 'datetime',
-            'total_questions' => 'integer',
-            'correct_answers' => 'integer',
-            'score' => 'decimal:2',
-        ];
-    }
+{
+    return [
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'total_questions' => 'integer',
+        'correct_answers' => 'integer',
+        'score' => 'decimal:2',
+        'question_order' => 'array',
+    ];
+}
 
     public function user(): BelongsTo
     {
