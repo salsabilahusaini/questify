@@ -27,6 +27,19 @@
                 </div>
             </div>
         </section>
+        @if ($errors->any())
+    <section
+        class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+    >
+        <p class="font-semibold">
+            Pretest belum dapat diselesaikan.
+        </p>
+
+        <p class="mt-1 text-sm">
+            {{ $errors->first() }}
+        </p>
+    </section>
+@endif
 
         <form
     method="POST"
@@ -57,13 +70,18 @@
                                             class="flex cursor-pointer items-start gap-4 rounded-2xl border border-neutral-200 p-4 transition hover:border-blue-400 hover:bg-blue-50 dark:border-neutral-700 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
                                         >
                                             <input
-                                                id="option-{{ $option->id }}"
-                                                type="radio"
-                                                name="answers[{{ $question->id }}]"
-                                                value="{{ $option->id }}"
-                                                class="mt-1 size-4 border-neutral-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-900"
-                                            >
-
+    id="option-{{ $option->id }}"
+    type="radio"
+    name="answers[{{ $question->id }}]"
+    value="{{ $option->id }}"
+    class="mt-1 size-4 border-neutral-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-900"
+    @checked(
+        (string) old(
+            'answers.' . $question->id
+        ) === (string) $option->id
+    )
+    required
+>
                                             <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-sm font-bold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
                                                 {{ chr(64 + $option->sequence) }}
                                             </span>
