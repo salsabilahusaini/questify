@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\FinalChallenge;
 use App\Models\FinalChallengeAttempt;
 use App\Models\Badge;
+use App\Models\MaterialBlock;
 use App\Models\MaterialBlockProgress;
+use App\Models\MaterialSection;
 use App\Models\MicroExerciseAttempt;
 use App\Models\Mission;
 use App\Models\MissionCompletion;
@@ -503,6 +505,122 @@ public function test_teacher_dashboard_has_no_attention_students_without_publish
     $response->assertViewHas(
         'focusedMission',
         null
+    );
+}
+/**
+ * Dashboard guru menghitung kesiapan belajar
+ * berdasarkan seluruh kegiatan prakelas.
+ */
+public function test_teacher_dashboard_displays_real_student_readiness_statistics(): void
+{
+    $teacher = User::factory()->create([
+        'role' => User::ROLE_TEACHER,
+    ]);
+
+    $readyStudent = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $attentionStudent = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = Mission::create([
+        'title' => 'Memahami Konsep Perulangan',
+        'slug' => 'dashboard-guru-perulangan-test',
+        'description' => 'Misi pengujian dashboard guru.',
+        'sequence' => 1,
+        'xp_reward' => 100,
+        'is_published' => true,
+    ]);
+
+    $materialSection = MaterialSection::create([
+    'mission_id' => $mission->id,
+    'title' => 'Konsep Dasar Perulangan',
+    'slug' => 'konsep-dasar-perulangan-dashboard-test',
+    'sequence' => 1,
+    'is_active' => true,
+]);
+
+    $materialBlock = MaterialBlock::create([
+        'material_section_id' => $materialSection->id,
+        'type' => 'paragraph',
+        'title' => 'Pengertian Perulangan',
+        'content' => 'Perulangan digunakan untuk menjalankan instruksi berulang.',
+        'sequence' => 1,
+        'minimum_read_seconds' => 30,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    foreach ([$readyStudent, $attentionStudent] as $student) {
+        PretestAttempt::create([
+            'user_id' => $student->id,
+            'mission_id' => $mission->id,
+            'status' => PretestAttempt::STATUS_COMPLETED,
+            'started_at' => now()->subMinutes(30),
+            'completed_at' => now()->subMinutes(25),
+            'total_questions' => 10,
+            'correct_answers' => 6,
+            'score' => 60,
+        ]);
+    }
+
+    MaterialBlockProgress::create([
+        'user_id' => $readyStudent->id,
+        'material_block_id' => $materialBlock->id,
+        'first_opened_at' => now()->subMinutes(20),
+        'last_activity_at' => now()->subMinutes(15),
+        'total_read_seconds' => 45,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now()->subMinutes(15),
+    ]);
+
+    MicroExerciseAttempt::create([
+        'user_id' => $readyStudent->id,
+        'mission_id' => $mission->id,
+        'status' => MicroExerciseAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(14),
+        'completed_at' => now()->subMinutes(10),
+        'total_questions' => 5,
+        'correct_answers' => 5,
+        'score' => 100,
+        'earned_points' => 50,
+    ]);
+
+    QuizAttempt::create([
+        'user_id' => $readyStudent->id,
+        'mission_id' => $mission->id,
+        'status' => QuizAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(9),
+        'completed_at' => now()->subMinutes(5),
+        'total_questions' => 5,
+        'correct_answers' => 4,
+        'score' => 80,
+        'earned_points' => 40,
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->get(route('teacher.dashboard'));
+
+    $response->assertOk();
+
+    $response->assertViewHas('studentCount', 2);
+    $response->assertViewHas('activeModuleCount', 1);
+    $response->assertViewHas('pretestCompletedCount', 2);
+    $response->assertViewHas('materialCompletedCount', 1);
+    $response->assertViewHas('microExerciseCompletedCount', 1);
+    $response->assertViewHas('quizCompletedCount', 1);
+    $response->assertViewHas('readyStudentCount', 1);
+    $response->assertViewHas('attentionStudentCount', 1);
+    $response->assertViewHas('requiredMaterialBlockCount', 1);
+
+    $response->assertViewHas(
+        'focusedMission',
+        fn ($focusedMission): bool =>
+            $focusedMission?->id === $mission->id
     );
 }
     /**
