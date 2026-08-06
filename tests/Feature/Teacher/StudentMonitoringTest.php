@@ -299,6 +299,161 @@ class StudentMonitoringTest extends TestCase
             false
         );
     }
+    /**
+ * Detail monitoring menampilkan hasil belajar,
+ * peningkatan nilai, dan aktivitas membaca siswa.
+ */
+public function test_monitoring_detail_displays_completed_learning_results(): void
+{
+    $teacher = User::factory()->create([
+        'role' => User::ROLE_TEACHER,
+    ]);
+
+    $student = User::factory()->create([
+        'name' => 'Siswa Hasil Lengkap',
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createPublishedMission();
+
+    $materialBlockId =
+        $this->createRequiredMaterialBlock(
+            $mission
+        );
+
+    PretestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PretestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(40),
+        'completed_at' => now()->subMinutes(35),
+        'total_questions' => 5,
+        'correct_answers' => 3,
+        'score' => 60,
+    ]);
+
+    MaterialBlockProgress::create([
+        'user_id' => $student->id,
+        'material_block_id' => $materialBlockId,
+        'first_opened_at' =>
+            now()->subMinutes(30),
+        'last_activity_at' =>
+            now()->subMinutes(25),
+        'total_read_seconds' => 65,
+        'visit_count' => 2,
+        'is_completed' => true,
+        'completed_at' =>
+            now()->subMinutes(25),
+    ]);
+
+    MicroExerciseAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            MicroExerciseAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(20),
+        'completed_at' => now()->subMinutes(18),
+        'total_questions' => 3,
+        'correct_answers' => 3,
+        'score' => 100,
+        'earned_points' => 30,
+    ]);
+
+    QuizAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            QuizAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(15),
+        'completed_at' => now()->subMinutes(12),
+        'total_questions' => 5,
+        'correct_answers' => 4,
+        'score' => 80,
+        'earned_points' => 80,
+    ]);
+
+    PosttestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PosttestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(10),
+        'completed_at' => now()->subMinutes(5),
+        'total_questions' => 5,
+        'correct_answers' => 4,
+        'score' => 80,
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->get(
+            route(
+                'teacher.monitoring.show',
+                [
+                    'student' => $student->id,
+                ]
+            )
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'isReady',
+        true
+    );
+
+    $response->assertViewHas(
+        'completedMaterialBlockCount',
+        1
+    );
+
+    $response->assertViewHas(
+        'materialProgressPercentage',
+        100.0
+    );
+
+    $response->assertViewHas(
+        'totalReadSeconds',
+        65
+    );
+
+    $response->assertViewHas(
+        'formattedReadTime',
+        '1 menit 5 detik'
+    );
+
+    $response->assertViewHas(
+        'totalVisits',
+        2
+    );
+
+    $response->assertViewHas(
+        'learningGain',
+        function ($learningGain): bool {
+            return (float) $learningGain === 20.0;
+        }
+    );
+
+    $response->assertViewHas(
+        'posttestAttempt',
+        function ($attempt): bool {
+            return $attempt !== null
+                && (float) $attempt->score === 80.0
+                && $attempt->correct_answers === 4;
+        }
+    );
+
+    $response->assertSee(
+        'Siswa Hasil Lengkap'
+    );
+
+    $response->assertSee('Siap Belajar');
+    $response->assertSee('Posttest');
+    $response->assertSee('Peningkatan Nilai');
+    $response->assertSee('+20');
+    $response->assertSee('1 menit 5 detik');
+}
 
     /**
      * Detail monitoring tidak boleh digunakan
