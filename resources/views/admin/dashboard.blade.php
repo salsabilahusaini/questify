@@ -223,16 +223,16 @@
                         </div>
 
                         <p class="mt-5 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-                            Modul Pembelajaran
-                        </p>
+    Misi Pembelajaran
+</p>
 
-                        <p class="mt-1 text-4xl font-bold tracking-tight text-neutral-950 dark:text-white">
-                            {{ $totalModules ?? 0 }}
-                        </p>
+<p class="mt-1 text-4xl font-bold tracking-tight text-neutral-950 dark:text-white">
+    {{ $totalMissions }}
+</p>
 
-                        <p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                            Modul yang tersedia
-                        </p>
+<p class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+    Misi yang telah dibuat
+</p>
                     </div>
                 </article>
             </div>

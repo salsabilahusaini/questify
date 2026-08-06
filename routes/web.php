@@ -15,6 +15,7 @@ use App\Http\Controllers\Teacher\MicroExerciseQuestionController as TeacherMicro
 use App\Http\Controllers\Teacher\QuizQuestionController as TeacherQuizQuestionController;
 use App\Http\Controllers\Teacher\FinalChallengeController as TeacherFinalChallengeController;
 use App\Models\User;
+use App\Models\Mission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\UserController;
@@ -65,6 +66,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'role',
             User::ROLE_STUDENT
         )->count(),
+        'totalMissions' => Mission::count(),
     ]);
 })
     ->middleware('role:admin')
