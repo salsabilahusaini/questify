@@ -170,6 +170,73 @@
                 </p>
             </div>
         </div>
+                {{-- Umpan balik setiap jawaban --}}
+        <div class="mt-6 space-y-4">
+            <h3 class="font-bold text-emerald-900">
+                Umpan Balik Jawaban
+            </h3>
+
+            @foreach ($attempt->answers as $answerIndex => $answer)
+                <article
+                    class="rounded-2xl border p-4
+                        {{ $answer->is_correct
+                            ? 'border-emerald-200 bg-white'
+                            : 'border-amber-200 bg-amber-50' }}"
+                >
+                    <div
+                        class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+                    >
+                        <div>
+                            <p
+                                class="text-xs font-semibold uppercase tracking-wider
+                                    {{ $answer->is_correct
+                                        ? 'text-emerald-700'
+                                        : 'text-amber-700' }}"
+                            >
+                                Soal {{ $answerIndex + 1 }}
+                            </p>
+
+                            <p class="mt-2 font-semibold text-neutral-900">
+                                {{ $answer->question?->question_text }}
+                            </p>
+
+                            <p class="mt-2 text-sm text-neutral-600">
+                                Jawabanmu:
+                                <span class="font-semibold">
+                                    {{ $answer->selectedOption?->option_text }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <span
+                            class="w-fit rounded-full px-3 py-1.5 text-xs font-semibold
+                                {{ $answer->is_correct
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : 'bg-amber-100 text-amber-700' }}"
+                        >
+                            {{ $answer->is_correct
+                                ? 'Jawaban Benar'
+                                : 'Jawaban Belum Tepat' }}
+                        </span>
+                    </div>
+
+                    <div
+                        class="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4"
+                    >
+                        <p class="text-sm leading-6 text-neutral-700">
+                            {{ $answer->is_correct
+                                ? $answer->question?->correct_feedback
+                                : $answer->question?->incorrect_feedback }}
+                        </p>
+                    </div>
+
+                    <p class="mt-3 text-xs font-semibold text-neutral-500">
+                        Poin diperoleh:
+                        {{ $answer->awarded_points }}
+                    </p>
+                </article>
+            @endforeach
+        </div>
     </div>
 @else
     <form

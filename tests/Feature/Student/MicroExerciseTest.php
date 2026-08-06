@@ -397,6 +397,39 @@ class MicroExerciseTest extends TestCase
                 'awarded_points' => 30,
             ]
         );
+        /*
+ * Halaman hasil menampilkan umpan balik
+ * untuk jawaban benar dan jawaban salah.
+ */
+$resultResponse = $this
+    ->actingAs($this->student)
+    ->get($showRoute);
+
+$resultResponse->assertOk();
+
+$resultResponse->assertSee(
+    'Umpan Balik Jawaban'
+);
+
+$resultResponse->assertSee(
+    'Jawaban Benar'
+);
+
+$resultResponse->assertSee(
+    'Jawaban Belum Tepat'
+);
+
+$resultResponse->assertSee(
+    'Jawaban benar.'
+);
+
+$resultResponse->assertSee(
+    'Jawaban belum tepat.'
+);
+
+$resultResponse->assertSee(
+    'Poin diperoleh:'
+);
 
         /*
          * Pengiriman ulang tidak boleh membuat attempt

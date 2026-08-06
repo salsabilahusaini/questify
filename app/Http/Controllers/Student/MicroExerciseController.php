@@ -110,8 +110,18 @@ class MicroExerciseController extends Controller
         );
 
         $attempt = $mission->microExerciseAttempts()
-            ->where('user_id', $request->user()->id)
-            ->first();
+    ->where('user_id', $request->user()->id)
+    ->with([
+        'answers' => function ($query): void {
+            $query
+                ->with([
+                    'question',
+                    'selectedOption',
+                ])
+                ->orderBy('id');
+        },
+    ])
+    ->first();
 
         return view('student.micro-exercise.show', [
             'mission' => $mission,
