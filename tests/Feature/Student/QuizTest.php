@@ -204,6 +204,76 @@ class QuizTest extends TestCase
             0
         );
     }
+    /**
+ * Opsi milik soal lain tidak boleh digunakan
+ * sebagai jawaban untuk suatu soal.
+ */
+public function test_option_from_another_question_is_rejected(): void
+{
+    $this->completeMicroExercise();
+
+    [
+        $firstQuestion,
+        $firstCorrectOption,
+    ] = $this->createQuestion(
+        sequence: 1,
+        questionText: 'Soal pertama.',
+        points: 20
+    );
+
+    [
+        $secondQuestion,
+        $secondCorrectOption,
+    ] = $this->createQuestion(
+        sequence: 2,
+        questionText: 'Soal kedua.',
+        points: 30
+    );
+
+    $showRoute = route(
+        'student.missions.quiz.show',
+        [
+            'mission' => $this->mission->slug,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($this->student)
+        ->from($showRoute)
+        ->post(
+            route(
+                'student.missions.quiz.submit',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            ),
+            [
+                'answers' => [
+                    $firstQuestion->id =>
+                        $secondCorrectOption->id,
+
+                    $secondQuestion->id =>
+                        $firstCorrectOption->id,
+                ],
+            ]
+        );
+
+    $response->assertRedirect($showRoute);
+    $response->assertSessionHasErrors('answers');
+
+    $this->assertDatabaseMissing(
+        'quiz_attempts',
+        [
+            'user_id' => $this->student->id,
+            'mission_id' => $this->mission->id,
+        ]
+    );
+
+    $this->assertDatabaseCount(
+        'quiz_answers',
+        0
+    );
+}
 
     /**
      * Beberapa soal Kuis Materi dinilai dengan benar
