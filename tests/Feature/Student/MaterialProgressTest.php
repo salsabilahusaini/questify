@@ -281,6 +281,62 @@ protected function tearDown(): void
         );
     }
     /**
+ * Blok tanpa durasi minimum langsung selesai
+ * ketika pertama kali dibuka.
+ */
+public function test_zero_minimum_read_time_completes_block_when_opened(): void
+{
+    $this->completePretest();
+
+    DB::table('material_blocks')
+        ->where('id', $this->materialBlockId)
+        ->update([
+            'minimum_read_seconds' => 0,
+            'updated_at' => now(),
+        ]);
+
+    $response = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.open',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        );
+
+    $response->assertOk();
+
+    $response->assertJsonPath(
+        'total_read_seconds',
+        0
+    );
+
+    $response->assertJsonPath(
+        'minimum_read_seconds',
+        0
+    );
+
+    $response->assertJsonPath(
+        'is_completed',
+        true
+    );
+
+    $this->assertDatabaseHas(
+        'material_block_progresses',
+        [
+            'user_id' => $this->student->id,
+            'material_block_id' =>
+                $this->materialBlockId,
+            'total_read_seconds' => 0,
+            'visit_count' => 1,
+            'is_completed' => true,
+        ]
+    );
+}
+    /**
  * Heartbeat yang dikirim tanpa adanya waktu berlalu
  * tidak boleh menambahkan durasi baca.
  */
