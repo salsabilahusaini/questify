@@ -228,7 +228,75 @@ class MaterialSectionManagementTest extends TestCase
             ]
         );
     }
+/**
+ * Urutan bagian yang sudah digunakan pada misi
+ * yang sama tidak boleh digunakan saat edit.
+ */
+public function test_material_section_sequence_must_remain_unique_when_updated(): void
+{
+    $teacher = $this->createTeacher();
 
+    $mission = $this->createMission();
+
+    MaterialSection::create([
+        'mission_id' => $mission->id,
+        'title' => 'Bagian Pertama',
+        'slug' => 'bagian-pertama',
+        'description' => 'Bagian pertama.',
+        'sequence' => 1,
+        'is_active' => true,
+    ]);
+
+    $secondSection = MaterialSection::create([
+        'mission_id' => $mission->id,
+        'title' => 'Bagian Kedua',
+        'slug' => 'bagian-kedua',
+        'description' => 'Bagian kedua.',
+        'sequence' => 2,
+        'is_active' => true,
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.material-sections.edit',
+        [
+            'mission' => $mission,
+            'section' => $secondSection,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.material-sections.update',
+                [
+                    'mission' => $mission,
+                    'section' => $secondSection,
+                ]
+            ),
+            [
+                'title' => 'Bagian Kedua',
+                'description' => 'Bagian kedua.',
+                'sequence' => 1,
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect($editRoute);
+
+    $response->assertSessionHasErrors(
+        'sequence'
+    );
+
+    $this->assertDatabaseHas(
+        'material_sections',
+        [
+            'id' => $secondSection->id,
+            'sequence' => 2,
+        ]
+    );
+}
     /**
  * Guru dapat menghapus bagian materi yang belum
  * memiliki aktivitas peserta didik.

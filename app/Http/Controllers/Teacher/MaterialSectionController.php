@@ -161,10 +161,21 @@ public function store(
                 'max:2000',
             ],
             'sequence' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
+    'required',
+    'integer',
+    'min:1',
+    Rule::unique(
+        'material_sections',
+        'sequence'
+    )
+        ->where(
+            fn ($query) => $query->where(
+                'mission_id',
+                $mission->id
+            )
+        )
+        ->ignore($section->id),
+],
         ]);
 
         /*
