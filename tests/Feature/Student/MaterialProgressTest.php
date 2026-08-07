@@ -410,6 +410,114 @@ public function test_checkpoint_does_not_complete_automatically(): void
     );
 }
 /**
+ * Checkpoint tidak dapat diselesaikan
+ * sebelum siswa membukanya.
+ */
+public function test_checkpoint_cannot_be_completed_before_it_is_opened(): void
+{
+    $this->completePretest();
+
+    DB::table('material_blocks')
+        ->where('id', $this->materialBlockId)
+        ->update([
+            'type' => 'checkpoint',
+            'minimum_read_seconds' => 0,
+            'updated_at' => now(),
+        ]);
+
+    $response = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.checkpoint.complete',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        );
+
+    $response
+        ->assertUnprocessable()
+        ->assertJsonPath(
+            'message',
+            'Buka Checkpoint terlebih dahulu.'
+        );
+
+    $this->assertDatabaseMissing(
+        'material_block_progresses',
+        [
+            'user_id' => $this->student->id,
+            'material_block_id' => $this->materialBlockId,
+        ]
+    );
+}
+/**
+ * Checkpoint tidak dapat diselesaikan
+ * sebelum waktu baca minimum terpenuhi.
+ */
+public function test_checkpoint_cannot_be_completed_before_minimum_read_time(): void
+{
+    $this->completePretest();
+
+    DB::table('material_blocks')
+        ->where('id', $this->materialBlockId)
+        ->update([
+            'type' => 'checkpoint',
+            'minimum_read_seconds' => 10,
+            'updated_at' => now(),
+        ]);
+
+    $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.open',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        )
+        ->assertOk();
+
+    $response = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.checkpoint.complete',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        );
+
+    $response
+        ->assertUnprocessable()
+        ->assertJsonPath(
+            'message',
+            'Penuhi waktu baca minimum sebelum menyelesaikan Checkpoint.'
+        )
+        ->assertJsonPath(
+            'minimum_read_seconds',
+            10
+        )
+        ->assertJsonPath(
+            'is_completed',
+            false
+        );
+
+    $this->assertDatabaseHas(
+        'material_block_progresses',
+        [
+            'user_id' => $this->student->id,
+            'material_block_id' => $this->materialBlockId,
+            'is_completed' => false,
+        ]
+    );
+}
+/**
  * Checkpoint dapat diselesaikan setelah dibuka
  * dan siswa melakukan konfirmasi.
  */
