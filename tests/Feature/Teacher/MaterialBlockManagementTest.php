@@ -290,6 +290,92 @@ CODE,
             ]
         );
     }
+    /**
+ * Urutan blok yang sudah digunakan dalam bagian
+ * yang sama tidak boleh digunakan saat edit.
+ */
+public function test_material_block_sequence_must_remain_unique_when_updated(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $section = $this->createSection(
+        $mission
+    );
+
+    MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' => MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Blok Pertama',
+        'content' => 'Isi blok pertama.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 10,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    $secondBlock = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' => MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Blok Kedua',
+        'content' => 'Isi blok kedua.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 2,
+        'minimum_read_seconds' => 10,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.material-blocks.edit',
+        [
+            'mission' => $mission,
+            'block' => $secondBlock,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.material-blocks.update',
+                [
+                    'mission' => $mission,
+                    'block' => $secondBlock,
+                ]
+            ),
+            [
+                'type' => MaterialBlock::TYPE_PARAGRAPH,
+                'title' => 'Blok Kedua',
+                'content' => 'Isi blok kedua.',
+                'code_language' => null,
+                'media_path' => null,
+                'sequence' => 1,
+                'minimum_read_seconds' => 10,
+                'is_required' => '1',
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect($editRoute);
+
+    $response->assertSessionHasErrors(
+        'sequence'
+    );
+
+    $this->assertDatabaseHas(
+        'material_blocks',
+        [
+            'id' => $secondBlock->id,
+            'sequence' => 2,
+        ]
+    );
+}
 
     /**
  * Guru dapat menghapus blok materi yang belum

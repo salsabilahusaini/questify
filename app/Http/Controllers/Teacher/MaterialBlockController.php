@@ -220,10 +220,21 @@ public function store(
                 'max:2048',
             ],
             'sequence' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
+    'required',
+    'integer',
+    'min:1',
+    Rule::unique(
+        'material_blocks',
+        'sequence'
+    )
+        ->where(
+            fn ($query) => $query->where(
+                'material_section_id',
+                $block->material_section_id
+            )
+        )
+        ->ignore($block->id),
+],
             'minimum_read_seconds' => [
                 'required',
                 'integer',
