@@ -336,6 +336,79 @@ public function test_zero_minimum_read_time_completes_block_when_opened(): void
         ]
     );
 }
+/**
+ * Checkpoint tidak boleh selesai otomatis
+ * hanya karena dibuka atau durasi baca terpenuhi.
+ */
+public function test_checkpoint_does_not_complete_automatically(): void
+{
+    $this->completePretest();
+
+    DB::table('material_blocks')
+        ->where('id', $this->materialBlockId)
+        ->update([
+            'type' => 'checkpoint',
+            'minimum_read_seconds' => 0,
+            'updated_at' => now(),
+        ]);
+
+    Carbon::setTestNow('2026-08-03 10:00:00');
+
+    $openResponse = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.open',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        );
+
+    $openResponse->assertOk();
+
+    $openResponse->assertJsonPath(
+        'is_completed',
+        false
+    );
+
+    Carbon::setTestNow(
+        now()->addSeconds(5)
+    );
+
+    $heartbeatResponse = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.heartbeat',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            ),
+            [
+                'seconds' => 5,
+            ]
+        );
+
+    $heartbeatResponse->assertOk();
+
+    $heartbeatResponse->assertJsonPath(
+        'is_completed',
+        false
+    );
+
+    $this->assertDatabaseHas(
+        'material_block_progresses',
+        [
+            'user_id' => $this->student->id,
+            'material_block_id' =>
+                $this->materialBlockId,
+            'is_completed' => false,
+        ]
+    );
+}
     /**
  * Heartbeat yang dikirim tanpa adanya waktu berlalu
  * tidak boleh menambahkan durasi baca.

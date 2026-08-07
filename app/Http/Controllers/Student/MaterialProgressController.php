@@ -44,9 +44,10 @@ class MaterialProgressController extends Controller
         $progress->visit_count = $progress->visit_count + 1;
 
         if (
-            ! $progress->is_completed
-            && $block->minimum_read_seconds === 0
-        ) {
+    ! $progress->is_completed
+    && $block->type !== MaterialBlock::TYPE_CHECKPOINT
+    && $block->minimum_read_seconds === 0
+) {
             $progress->is_completed = true;
             $progress->completed_at = now();
         }
@@ -132,9 +133,10 @@ class MaterialProgressController extends Controller
             $progress->last_activity_at = $now;
 
             if (
-                $progress->total_read_seconds
-                >= $block->minimum_read_seconds
-            ) {
+    $block->type !== MaterialBlock::TYPE_CHECKPOINT
+    && $progress->total_read_seconds
+        >= $block->minimum_read_seconds
+) {
                 $progress->is_completed = true;
                 $progress->completed_at = $now;
             }
@@ -143,9 +145,10 @@ class MaterialProgressController extends Controller
         }
 
         if (
-            ! $progress->is_completed
-            && $block->minimum_read_seconds === 0
-        ) {
+    ! $progress->is_completed
+    && $block->type !== MaterialBlock::TYPE_CHECKPOINT
+    && $block->minimum_read_seconds === 0
+) {
             $progress->is_completed = true;
             $progress->completed_at = $now;
             $progress->last_activity_at = $now;
@@ -172,7 +175,6 @@ class MaterialProgressController extends Controller
         'is_completed' => $progress->is_completed,
     ]);
 }
-
     /**
      * Memastikan siswa berhak mengakses blok materi.
      */
