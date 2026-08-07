@@ -480,7 +480,122 @@ public function test_teacher_cannot_add_required_active_block_after_student_mate
         ]
     );
 }
+/**
+ * Guru tidak dapat menjadikan blok aktif dan wajib
+ * setelah materi sudah memiliki aktivitas siswa.
+ */
+public function test_teacher_cannot_make_block_required_and_active_after_student_material_activity(): void
+{
+    $teacher = $this->createTeacher();
 
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $section = $this->createSection(
+        $mission
+    );
+
+    $trackedBlock = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Blok yang Sudah Dibaca',
+        'content' =>
+            'Materi yang sudah dipelajari siswa.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 10,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    $optionalBlock = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Blok Opsional',
+        'content' =>
+            'Blok yang semula tidak wajib.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 2,
+        'minimum_read_seconds' => 10,
+        'is_required' => false,
+        'is_active' => true,
+    ]);
+
+    DB::table(
+        'material_block_progresses'
+    )->insert([
+        'user_id' => $student->id,
+        'material_block_id' =>
+            $trackedBlock->id,
+        'first_opened_at' => now(),
+        'last_activity_at' => now(),
+        'total_read_seconds' => 10,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.material-blocks.edit',
+        [
+            'mission' => $mission,
+            'block' => $optionalBlock,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.material-blocks.update',
+                [
+                    'mission' => $mission,
+                    'block' => $optionalBlock,
+                ]
+            ),
+            [
+                'type' =>
+                    MaterialBlock::TYPE_PARAGRAPH,
+                'title' => 'Blok Opsional',
+                'content' =>
+                    'Blok yang semula tidak wajib.',
+                'code_language' => null,
+                'media_path' => null,
+                'sequence' => 2,
+                'minimum_read_seconds' => 10,
+                'is_required' => '1',
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Blok tidak dapat dijadikan aktif dan wajib karena materi sudah memiliki aktivitas peserta didik.'
+    );
+
+    $this->assertDatabaseHas(
+        'material_blocks',
+        [
+            'id' => $optionalBlock->id,
+            'is_required' => false,
+            'is_active' => true,
+        ]
+    );
+}
     /**
  * Guru dapat menghapus blok materi yang belum
  * memiliki aktivitas peserta didik.

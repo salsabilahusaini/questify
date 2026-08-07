@@ -300,6 +300,58 @@ if (
         $validated['is_active'] =
             $request->boolean('is_active');
 
+            /*
+ * Blok yang sebelumnya belum aktif+wajib
+ * tidak boleh dijadikan aktif+wajib setelah
+ * materi memiliki aktivitas peserta didik.
+ */
+$becomesRequiredAndActive =
+    $validated['is_required']
+    && $validated['is_active']
+    && (
+        ! $block->is_required
+        || ! $block->is_active
+    );
+
+if ($becomesRequiredAndActive) {
+    $hasStudentMaterialActivity = DB::table(
+        'material_block_progresses'
+    )
+        ->join(
+            'material_blocks',
+            'material_blocks.id',
+            '=',
+            'material_block_progresses.material_block_id'
+        )
+        ->join(
+            'material_sections',
+            'material_sections.id',
+            '=',
+            'material_blocks.material_section_id'
+        )
+        ->where(
+            'material_sections.mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentMaterialActivity) {
+        return redirect()
+            ->route(
+                'teacher.missions.material-blocks.edit',
+                [
+                    'mission' => $mission,
+                    'block' => $block,
+                ]
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Blok tidak dapat dijadikan aktif dan wajib karena materi sudah memiliki aktivitas peserta didik.'
+            );
+    }
+}
+
         /*
          * Bahasa kode hanya digunakan untuk blok kode.
          */
