@@ -40,6 +40,37 @@ class QuizTest extends TestCase
             'is_published' => true,
         ]);
     }
+    /**
+ * Halaman Kuis Materi tidak dapat dibuka
+ * sebelum Latihan Mikro diselesaikan.
+ */
+public function test_quiz_page_is_rejected_before_micro_exercise_is_completed(): void
+{
+    $response = $this
+        ->actingAs($this->student)
+        ->get(
+            route(
+                'student.missions.quiz.show',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan Latihan Mikro terlebih dahulu.'
+    );
+}
 
     /**
      * Request langsung menuju submit ditolak
