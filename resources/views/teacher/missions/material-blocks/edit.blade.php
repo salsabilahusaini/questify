@@ -120,6 +120,14 @@
                 Perubahan yang disimpan akan digunakan pada halaman
                 Materi Prakelas peserta didik.
             </p>
+            @if (session('error'))
+    <div
+        class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+        role="alert"
+    >
+        {{ session('error') }}
+    </div>
+@endif
 
             <form
                 method="POST"
