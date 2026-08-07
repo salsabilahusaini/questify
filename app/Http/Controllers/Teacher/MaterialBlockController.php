@@ -119,6 +119,53 @@ public function store(
     $validated['is_active'] =
         $request->boolean('is_active');
 
+        /*
+ * Blok aktif dan wajib tidak boleh ditambahkan
+ * setelah materi pada misi sudah memiliki
+ * aktivitas peserta didik.
+ */
+if (
+    $validated['is_required']
+    && $validated['is_active']
+) {
+    $hasStudentMaterialActivity = DB::table(
+        'material_block_progresses'
+    )
+        ->join(
+            'material_blocks',
+            'material_blocks.id',
+            '=',
+            'material_block_progresses.material_block_id'
+        )
+        ->join(
+            'material_sections',
+            'material_sections.id',
+            '=',
+            'material_blocks.material_section_id'
+        )
+        ->where(
+            'material_sections.mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentMaterialActivity) {
+        return redirect()
+            ->route(
+                'teacher.missions.material-blocks.create',
+                [
+                    'mission' => $mission,
+                    'section' => $section,
+                ]
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Blok aktif dan wajib tidak dapat ditambahkan karena materi sudah memiliki aktivitas peserta didik.'
+            );
+    }
+}
+
     /*
      * Bahasa kode hanya digunakan pada
      * blok Kode Program.

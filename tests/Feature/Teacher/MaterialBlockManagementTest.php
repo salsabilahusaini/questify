@@ -376,6 +376,110 @@ public function test_material_block_sequence_must_remain_unique_when_updated(): 
         ]
     );
 }
+/**
+ * Guru tidak dapat menambahkan blok aktif dan wajib
+ * setelah materi sudah memiliki aktivitas siswa.
+ */
+public function test_teacher_cannot_add_required_active_block_after_student_material_activity(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $section = $this->createSection(
+        $mission
+    );
+
+    $existingBlock = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' =>
+            'Blok Materi Awal',
+        'content' =>
+            'Materi yang sudah mulai dipelajari siswa.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 10,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    DB::table(
+        'material_block_progresses'
+    )->insert([
+        'user_id' => $student->id,
+        'material_block_id' =>
+            $existingBlock->id,
+        'first_opened_at' => now(),
+        'last_activity_at' => now(),
+        'total_read_seconds' => 10,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $createRoute = route(
+        'teacher.missions.material-blocks.create',
+        [
+            'mission' => $mission,
+            'section' => $section,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($createRoute)
+        ->post(
+            route(
+                'teacher.missions.material-blocks.store',
+                [
+                    'mission' => $mission,
+                    'section' => $section,
+                ]
+            ),
+            [
+                'type' =>
+                    MaterialBlock::TYPE_CHECKPOINT,
+                'title' =>
+                    'Checkpoint Baru',
+                'content' =>
+                    'Checkpoint yang ditambahkan setelah siswa belajar.',
+                'code_language' => null,
+                'media_path' => null,
+                'sequence' => 2,
+                'minimum_read_seconds' => 0,
+                'is_required' => '1',
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect(
+        $createRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Blok aktif dan wajib tidak dapat ditambahkan karena materi sudah memiliki aktivitas peserta didik.'
+    );
+
+    $this->assertDatabaseMissing(
+        'material_blocks',
+        [
+            'material_section_id' =>
+                $section->id,
+            'title' =>
+                'Checkpoint Baru',
+        ]
+    );
+}
 
     /**
  * Guru dapat menghapus blok materi yang belum
