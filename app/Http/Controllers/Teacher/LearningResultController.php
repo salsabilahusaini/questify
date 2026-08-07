@@ -399,9 +399,12 @@ $averageLearningGain = $this->averageScore(
          * rata-rata siswa yang sudah memiliki nilai.
          */
         $overallAverageScore = $this->averageScore(
-            $learningResultRows,
-            'average_score'
-        );
+    $learningResultRows->where(
+        'is_complete',
+        true
+    ),
+    'average_score'
+);
 
         return view('teacher.results.index', [
             'publishedMissions' =>

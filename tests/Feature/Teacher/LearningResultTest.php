@@ -336,7 +336,146 @@ CODE,
             }
         );
     }
+/**
+ * Siswa dengan hasil yang belum lengkap tidak
+ * memengaruhi rata-rata keseluruhan.
+ */
+public function test_incomplete_student_does_not_affect_overall_average_score(): void
+{
+    $teacher = User::factory()->create([
+        'role' => User::ROLE_TEACHER,
+    ]);
 
+    $completeStudent = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $incompleteStudent = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createPublishedMission();
+
+    /*
+     * Siswa pertama memiliki lima hasil lengkap,
+     * seluruhnya bernilai 80.
+     */
+    PretestAttempt::create([
+        'user_id' => $completeStudent->id,
+        'mission_id' => $mission->id,
+        'status' => PretestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(50),
+        'completed_at' => now()->subMinutes(45),
+        'total_questions' => 10,
+        'correct_answers' => 8,
+        'score' => 80,
+    ]);
+
+    MicroExerciseAttempt::create([
+        'user_id' => $completeStudent->id,
+        'mission_id' => $mission->id,
+        'status' => MicroExerciseAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(40),
+        'completed_at' => now()->subMinutes(35),
+        'total_questions' => 10,
+        'correct_answers' => 8,
+        'score' => 80,
+        'earned_points' => 80,
+    ]);
+
+    QuizAttempt::create([
+        'user_id' => $completeStudent->id,
+        'mission_id' => $mission->id,
+        'status' => QuizAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(30),
+        'completed_at' => now()->subMinutes(25),
+        'total_questions' => 10,
+        'correct_answers' => 8,
+        'score' => 80,
+        'earned_points' => 80,
+    ]);
+
+    $finalChallenge = FinalChallenge::create([
+        'mission_id' => $mission->id,
+        'title' => 'Final Challenge',
+        'scenario' => 'Selesaikan permasalahan.',
+        'instructions' => 'Berikan solusi.',
+        'starter_code' => '',
+        'expected_output' => '',
+        'max_points' => 100,
+        'is_active' => true,
+    ]);
+
+    FinalChallengeAttempt::create([
+        'user_id' => $completeStudent->id,
+        'mission_id' => $mission->id,
+        'final_challenge_id' => $finalChallenge->id,
+        'status' =>
+            FinalChallengeAttempt::STATUS_COMPLETED,
+        'answer_code' => 'jawaban',
+        'answer_output' => 'hasil',
+        'answer_explanation' => 'penjelasan',
+        'started_at' => now()->subMinutes(20),
+        'completed_at' => now()->subMinutes(15),
+        'score' => 80,
+        'earned_points' => 80,
+        'feedback' => 'Baik.',
+    ]);
+
+    PosttestAttempt::create([
+        'user_id' => $completeStudent->id,
+        'mission_id' => $mission->id,
+        'status' => PosttestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(10),
+        'completed_at' => now()->subMinutes(5),
+        'total_questions' => 10,
+        'correct_answers' => 8,
+        'score' => 80,
+    ]);
+
+    /*
+     * Siswa kedua baru memiliki Pretest.
+     * Nilai 100 ini tidak boleh mengubah
+     * rata-rata keseluruhan.
+     */
+    PretestAttempt::create([
+        'user_id' => $incompleteStudent->id,
+        'mission_id' => $mission->id,
+        'status' => PretestAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinutes(10),
+        'completed_at' => now()->subMinutes(5),
+        'total_questions' => 10,
+        'correct_answers' => 10,
+        'score' => 100,
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->get(
+            route('teacher.results.index')
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'completeResultCount',
+        1
+    );
+
+    $response->assertViewHas(
+        'incompleteResultCount',
+        1
+    );
+
+    /*
+     * Hanya siswa dengan lima hasil lengkap
+     * yang masuk rata-rata keseluruhan.
+     */
+    $response->assertViewHas(
+        'overallAverageScore',
+        80.0
+    );
+}
     /**
      * Membuat satu misi yang dipublikasikan.
      */
