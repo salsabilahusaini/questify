@@ -61,6 +61,37 @@ CODE,
             'is_active' => true,
         ]);
     }
+    /**
+ * Halaman Final Challenge tidak dapat dibuka
+ * sebelum Kuis Materi diselesaikan.
+ */
+public function test_final_challenge_page_is_rejected_before_quiz_is_completed(): void
+{
+    $response = $this
+        ->actingAs($this->student)
+        ->get(
+            route(
+                'student.missions.final-challenge.show',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan Kuis Materi terlebih dahulu.'
+    );
+}
 
     /**
      * Request langsung menuju submit ditolak
