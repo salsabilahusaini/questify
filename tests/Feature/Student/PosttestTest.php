@@ -78,6 +78,42 @@ class PosttestTest extends TestCase
             'correct_answers' => 0,
         ]);
     }
+    /**
+ * Halaman Posttest tidak dapat dibuka
+ * sebelum Final Challenge diselesaikan.
+ */
+public function test_posttest_page_is_rejected_before_final_challenge_is_completed(): void
+{
+    FinalChallengeAttempt::query()
+        ->where('user_id', $this->student->id)
+        ->where('mission_id', $this->mission->id)
+        ->delete();
+
+    $response = $this
+        ->actingAs($this->student)
+        ->get(
+            route(
+                'student.missions.posttest.show',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan Final Challenge terlebih dahulu.'
+    );
+}
 
     /**
  * Soal Posttest ditampilkan berdasarkan urutan
