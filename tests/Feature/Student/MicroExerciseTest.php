@@ -82,6 +82,37 @@ class MicroExerciseTest extends TestCase
             'updated_at' => now(),
         ]);
     }
+    /**
+ * Halaman Latihan Mikro tidak dapat dibuka
+ * sebelum seluruh materi wajib diselesaikan.
+ */
+public function test_micro_exercise_page_is_rejected_before_required_material_is_completed(): void
+{
+    $response = $this
+        ->actingAs($this->student)
+        ->get(
+            route(
+                'student.missions.micro-exercise.show',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan seluruh Materi Prakelas terlebih dahulu.'
+    );
+}
 
     /**
      * Request langsung menuju submit ditolak
