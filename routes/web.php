@@ -573,6 +573,15 @@ Route::post(
     ->middleware('role:student')
     ->name('student.missions.material.blocks.heartbeat');
 
+    Route::post(
+    '/student/missions/{mission:slug}/material/blocks/{block}/checkpoint/complete',
+    [MaterialProgressController::class, 'completeCheckpoint']
+)
+    ->middleware('role:student')
+    ->name(
+        'student.missions.material.blocks.checkpoint.complete'
+    );
+
 Route::get(
     '/student/progress',
     [ProgressController::class, 'index']

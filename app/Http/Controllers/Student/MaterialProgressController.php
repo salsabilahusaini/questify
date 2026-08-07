@@ -175,6 +175,83 @@ class MaterialProgressController extends Controller
         'is_completed' => $progress->is_completed,
     ]);
 }
+/**
+ * Menandai Checkpoint sebagai selesai
+ * setelah siswa melakukan konfirmasi.
+ */
+public function completeCheckpoint(
+    Request $request,
+    Mission $mission,
+    MaterialBlock $block
+): JsonResponse {
+    $this->ensureAccess(
+        $request,
+        $mission,
+        $block
+    );
+
+    abort_unless(
+        $block->type === MaterialBlock::TYPE_CHECKPOINT,
+        404
+    );
+
+    $progress = MaterialBlockProgress::query()
+        ->where(
+            'user_id',
+            $request->user()->id
+        )
+        ->where(
+            'material_block_id',
+            $block->id
+        )
+        ->first();
+
+    if ($progress === null) {
+        return response()->json(
+            [
+                'message' =>
+                    'Buka Checkpoint terlebih dahulu.',
+            ],
+            422
+        );
+    }
+
+    if (
+        $progress->total_read_seconds
+        < $block->minimum_read_seconds
+    ) {
+        return response()->json(
+            [
+                'message' =>
+                    'Penuhi waktu baca minimum sebelum menyelesaikan Checkpoint.',
+                'total_read_seconds' =>
+                    $progress->total_read_seconds,
+                'minimum_read_seconds' =>
+                    $block->minimum_read_seconds,
+                'is_completed' => false,
+            ],
+            422
+        );
+    }
+
+    if (! $progress->is_completed) {
+        $progress->update([
+            'is_completed' => true,
+            'completed_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+    }
+
+    return response()->json([
+        'message' =>
+            'Checkpoint berhasil diselesaikan.',
+        'total_read_seconds' =>
+            $progress->total_read_seconds,
+        'minimum_read_seconds' =>
+            $block->minimum_read_seconds,
+        'is_completed' => true,
+    ]);
+}
     /**
      * Memastikan siswa berhak mengakses blok materi.
      */

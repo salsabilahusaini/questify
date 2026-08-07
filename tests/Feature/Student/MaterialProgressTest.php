@@ -409,6 +409,79 @@ public function test_checkpoint_does_not_complete_automatically(): void
         ]
     );
 }
+/**
+ * Checkpoint dapat diselesaikan setelah dibuka
+ * dan siswa melakukan konfirmasi.
+ */
+public function test_checkpoint_can_be_completed_after_confirmation(): void
+{
+    $this->completePretest();
+
+    DB::table('material_blocks')
+        ->where('id', $this->materialBlockId)
+        ->update([
+            'type' => 'checkpoint',
+            'minimum_read_seconds' => 0,
+            'updated_at' => now(),
+        ]);
+
+    $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.open',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        )
+        ->assertOk()
+        ->assertJsonPath(
+            'is_completed',
+            false
+        );
+
+    $response = $this
+        ->actingAs($this->student)
+        ->postJson(
+            route(
+                'student.missions.material.blocks.checkpoint.complete',
+                [
+                    'mission' => $this->mission->slug,
+                    'block' => $this->materialBlockId,
+                ]
+            )
+        );
+
+    $response->assertOk();
+
+    $response->assertJsonPath(
+        'is_completed',
+        true
+    );
+
+    $response->assertJsonPath(
+        'message',
+        'Checkpoint berhasil diselesaikan.'
+    );
+
+    $progress = MaterialBlockProgress::query()
+        ->where('user_id', $this->student->id)
+        ->where(
+            'material_block_id',
+            $this->materialBlockId
+        )
+        ->firstOrFail();
+
+    $this->assertTrue(
+        $progress->is_completed
+    );
+
+    $this->assertNotNull(
+        $progress->completed_at
+    );
+}
     /**
  * Heartbeat yang dikirim tanpa adanya waktu berlalu
  * tidak boleh menambahkan durasi baca.
