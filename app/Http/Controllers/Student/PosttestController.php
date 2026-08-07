@@ -80,65 +80,91 @@ class PosttestController extends Controller
      * Memulai pengerjaan Posttest siswa.
      */
     public function start(
-        Request $request,
-        Mission $mission
-    ): RedirectResponse {
-        abort_unless($mission->is_published, 404);
+    Request $request,
+    Mission $mission
+): RedirectResponse {
+    abort_unless($mission->is_published, 404);
 
-        $finalChallengeCompleted =
-            FinalChallengeAttempt::query()
-                ->where('mission_id', $mission->id)
-                ->where(
-                    'user_id',
-                    $request->user()->id
-                )
-                ->where(
-                    'status',
-                    FinalChallengeAttempt::STATUS_COMPLETED
-                )
-                ->exists();
+    $finalChallengeCompleted =
+        FinalChallengeAttempt::query()
+            ->where('mission_id', $mission->id)
+            ->where(
+                'user_id',
+                $request->user()->id
+            )
+            ->where(
+                'status',
+                FinalChallengeAttempt::STATUS_COMPLETED
+            )
+            ->exists();
 
-        if (! $finalChallengeCompleted) {
-            return redirect()
-                ->route(
-                    'student.missions.show',
-                    ['mission' => $mission->slug]
-                )
-                ->with(
-                    'error',
-                    'Selesaikan Final Challenge terlebih dahulu.'
-                );
-        }
+    if (! $finalChallengeCompleted) {
+        return redirect()
+            ->route(
+                'student.missions.show',
+                ['mission' => $mission->slug]
+            )
+            ->with(
+                'error',
+                'Selesaikan Final Challenge terlebih dahulu.'
+            );
+    }
 
-        $questionCount = $mission
-            ->posttestQuestions()
-            ->where('is_active', true)
-            ->count();
+    $questionIds = $mission
+        ->posttestQuestions()
+        ->where('is_active', true)
+        ->pluck('id');
 
-        abort_if(
-            $questionCount === 0,
-            404,
-            'Soal Posttest belum tersedia.'
-        );
+    abort_if(
+        $questionIds->isEmpty(),
+        404,
+        'Soal Posttest belum tersedia.'
+    );
 
-        $mission->posttestAttempts()->firstOrCreate(
+    $attempt = $mission
+        ->posttestAttempts()
+        ->firstOrCreate(
             [
                 'user_id' => $request->user()->id,
             ],
             [
-    'status' => PosttestAttempt::STATUS_IN_PROGRESS,
-    'started_at' => now(),
-    'total_questions' => $questionCount,
-    'correct_answers' => 0,
-]
+                'status' =>
+                    PosttestAttempt::STATUS_IN_PROGRESS,
+                'started_at' => now(),
+                'total_questions' =>
+                    $questionIds->count(),
+                'correct_answers' => 0,
+                'question_order' => $questionIds
+                    ->shuffle()
+                    ->values()
+                    ->all(),
+            ]
         );
 
-        return redirect()->route(
-            'student.missions.posttest.questions',
-            ['mission' => $mission->slug]
-        );
+    /*
+     * Attempt lama yang masih berlangsung mungkin
+     * belum memiliki urutan soal.
+     */
+    if (
+        $attempt->status
+            === PosttestAttempt::STATUS_IN_PROGRESS
+        && empty($attempt->question_order)
+    ) {
+        $attempt->update([
+            'total_questions' =>
+                $questionIds->count(),
+            'question_order' => $questionIds
+                ->shuffle()
+                ->values()
+                ->all(),
+        ]);
     }
 
+    return redirect()->route(
+        'student.missions.posttest.questions',
+        ['mission' => $mission->slug]
+    );
+}
     /**
      * Menampilkan soal Posttest yang sedang dikerjakan.
      */
@@ -203,29 +229,69 @@ class PosttestController extends Controller
             );
         }
 
-                $questions = $mission
-            ->posttestQuestions()
-            ->where('is_active', true)
-            ->select([
-                'id',
-                'mission_id',
-                'question_text',
-                'sequence',
-            ])
-            ->orderBy('sequence')
-            ->with([
-                'options' => function ($query) {
-                    $query
-                        ->select([
-                            'id',
-                            'posttest_question_id',
-                            'option_text',
-                            'sequence',
-                        ])
-                        ->orderBy('sequence');
-                },
-            ])
-            ->get();
+                $questionOrder = collect($attempt->question_order)
+    ->map(
+        fn ($questionId): int => (int) $questionId
+    )
+    ->values();
+
+/*
+ * Menangani attempt lama yang dibuat sebelum
+ * kolom question_order tersedia.
+ */
+if ($questionOrder->isEmpty()) {
+    $questionOrder = $mission
+        ->posttestQuestions()
+        ->where('is_active', true)
+        ->pluck('id')
+        ->shuffle()
+        ->values();
+
+    abort_if(
+        $questionOrder->isEmpty(),
+        404,
+        'Soal Posttest belum tersedia.'
+    );
+
+    $attempt->update([
+        'total_questions' => $questionOrder->count(),
+        'question_order' => $questionOrder->all(),
+    ]);
+}
+
+$questions = $mission
+    ->posttestQuestions()
+    ->whereIn('id', $questionOrder->all())
+    ->select([
+        'id',
+        'mission_id',
+        'question_text',
+        'sequence',
+    ])
+    ->with([
+        'options' => function ($query): void {
+            $query
+                ->select([
+                    'id',
+                    'posttest_question_id',
+                    'option_text',
+                    'sequence',
+                ])
+                ->orderBy('sequence');
+        },
+    ])
+    ->get();
+
+$orderPositions = $questionOrder->flip();
+
+$questions = $questions
+    ->sortBy(
+        fn ($question): int => (int) $orderPositions->get(
+            $question->id,
+            PHP_INT_MAX
+        )
+    )
+    ->values();
 
         abort_if(
             $questions->isEmpty(),
@@ -328,12 +394,70 @@ class PosttestController extends Controller
             ]
         );
 
-        $questions = $mission
+        $questionOrder = collect($attempt->question_order)
+    ->map(
+        fn ($questionId): int => (int) $questionId
+    )
+    ->values();
+
+/*
+ * Menangani attempt lama yang dibuat sebelum
+ * kolom question_order tersedia.
+ */
+if ($questionOrder->isEmpty()) {
+    $questionOrder = $mission
+        ->posttestQuestions()
+        ->where('is_active', true)
+        ->pluck('id')
+        ->shuffle()
+        ->values();
+
+    abort_if(
+        $questionOrder->isEmpty(),
+        404,
+        'Soal Posttest belum tersedia.'
+    );
+
+    $attempt->update([
+        'total_questions' => $questionOrder->count(),
+        'question_order' => $questionOrder->all(),
+    ]);
+}
+
+$questions = $mission
     ->posttestQuestions()
-    ->where('is_active', true)
-    ->with('options')
-    ->orderBy('sequence')
+    ->whereIn('id', $questionOrder->all())
+    ->select([
+        'id',
+        'mission_id',
+        'question_text',
+        'sequence',
+    ])
+    ->with([
+        'options' => function ($query): void {
+    $query
+        ->select([
+            'id',
+            'posttest_question_id',
+            'option_text',
+            'sequence',
+            'is_correct',
+        ])
+        ->orderBy('sequence');
+},
+    ])
     ->get();
+
+$orderPositions = $questionOrder->flip();
+
+$questions = $questions
+    ->sortBy(
+        fn ($question): int => (int) $orderPositions->get(
+            $question->id,
+            PHP_INT_MAX
+        )
+    )
+    ->values();
 
         abort_if(
             $questions->isEmpty(),

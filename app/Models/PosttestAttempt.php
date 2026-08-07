@@ -21,6 +21,7 @@ class PosttestAttempt extends Model
         'total_questions',
         'correct_answers',
         'score',
+        'question_order',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class PosttestAttempt extends Model
             'total_questions' => 'integer',
             'correct_answers' => 'integer',
             'score' => 'decimal:2',
+            'question_order' => 'array',
         ];
     }
 
