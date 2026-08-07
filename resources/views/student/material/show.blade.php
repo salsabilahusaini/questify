@@ -196,6 +196,21 @@
                             {{ $block->content }}
                         </p>
                     @endif
+                    @if (! $isCompleted)
+    <button
+        type="button"
+        class="checkpoint-complete-button mt-4 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+        data-complete-url="{{ route(
+            'student.missions.material.blocks.checkpoint.complete',
+            [
+                'mission' => $mission->slug,
+                'block' => $block->id,
+            ]
+        ) }}"
+    >
+        Tandai Checkpoint Selesai
+    </button>
+@endif
                 </div>
                 @break
         @endswitch
@@ -217,6 +232,11 @@
         const materialBlocks = Array.from(
             document.querySelectorAll('.material-block')
         );
+        const checkpointButtons = Array.from(
+    document.querySelectorAll(
+        '.checkpoint-complete-button'
+    )
+);
 
         if (materialBlocks.length === 0) {
             return;
@@ -325,6 +345,65 @@ function updateBlockDisplay(block, result) {
 
             return response.json();
         }
+        checkpointButtons.forEach((button) => {
+    if (button.dataset.listenerBound === 'true') {
+        return;
+    }
+
+    button.dataset.listenerBound = 'true';
+
+    button.addEventListener('click', async () => {
+        const block = button.closest('.material-block');
+
+        if (!block) {
+            return;
+        }
+
+        const originalText = button.textContent;
+
+        button.disabled = true;
+        button.textContent = 'Memproses...';
+
+        try {
+            const result = await sendRequest(
+                button.dataset.completeUrl
+            );
+
+            block.dataset.totalReadSeconds =
+                result.total_read_seconds;
+
+            block.dataset.isCompleted =
+                result.is_completed
+                    ? 'true'
+                    : 'false';
+
+            updateBlockDisplay(
+                block,
+                result
+            );
+
+            if (result.is_completed) {
+                button.remove();
+                determineActiveBlock();
+            }
+        } catch (error) {
+            console.error(
+                'Gagal menyelesaikan Checkpoint:',
+                error
+            );
+
+            alert(
+                'Checkpoint belum dapat diselesaikan. '
+                + 'Pastikan waktu baca minimum telah terpenuhi.'
+            );
+        } finally {
+            if (button.isConnected) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+    });
+});
 
         async function recordBlockOpen(block) {
             const blockId = block.dataset.blockId;
