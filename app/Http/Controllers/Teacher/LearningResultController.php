@@ -179,24 +179,38 @@ $posttestAttempts = PosttestAttempt::query()
          * Mengambil total XP dan jumlah misi selesai
          * untuk setiap peserta didik.
          */
-        $missionStatistics =
-            MissionCompletion::query()
-                ->whereIn('user_id', $studentIds)
-                ->select('user_id')
-                ->selectRaw(
-                    'COUNT(*) AS completed_missions'
-                )
-                ->selectRaw(
-                    '
-                    COALESCE(
-                        SUM(earned_xp),
-                        0
-                    ) AS total_xp
-                    '
-                )
-                ->groupBy('user_id')
-                ->get()
-                ->keyBy('user_id');
+        $missionStatistics = collect();
+
+if (
+    $focusedMission !== null
+    && $studentIds->isNotEmpty()
+) {
+    $missionStatistics =
+        MissionCompletion::query()
+            ->where(
+                'mission_id',
+                $focusedMission->id
+            )
+            ->whereIn(
+                'user_id',
+                $studentIds
+            )
+            ->select('user_id')
+            ->selectRaw(
+                'COUNT(*) AS completed_missions'
+            )
+            ->selectRaw(
+                '
+                COALESCE(
+                    SUM(earned_xp),
+                    0
+                ) AS total_xp
+                '
+            )
+            ->groupBy('user_id')
+            ->get()
+            ->keyBy('user_id');
+}
 
         /*
          * Menggabungkan hasil aktivitas menjadi satu

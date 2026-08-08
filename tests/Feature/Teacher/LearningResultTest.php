@@ -476,6 +476,76 @@ public function test_incomplete_student_does_not_affect_overall_average_score():
         80.0
     );
 }
+/**
+ * XP dan jumlah misi selesai pada rekap hanya
+ * berasal dari misi yang sedang direkap.
+ */
+public function test_result_statistics_only_use_focused_mission_completion(): void
+{
+    $teacher = User::factory()->create([
+        'role' => User::ROLE_TEACHER,
+    ]);
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $focusedMission = $this->createPublishedMission();
+
+    $otherMission = Mission::create([
+        'title' => 'Misi Pembelajaran Lain',
+        'slug' => 'misi-pembelajaran-lain-test',
+        'description' =>
+            'Misi lain untuk memastikan statistik tidak tercampur.',
+        'sequence' => 2,
+        'xp_reward' => 250,
+        'is_published' => true,
+    ]);
+
+    /*
+     * Penyelesaian pada misi yang sedang direkap.
+     */
+    MissionCompletion::create([
+        'user_id' => $student->id,
+        'mission_id' => $focusedMission->id,
+        'earned_xp' => 100,
+        'completed_at' => now()->subDay(),
+    ]);
+
+    /*
+     * Penyelesaian misi lain tidak boleh ikut
+     * masuk ke statistik rekap misi pertama.
+     */
+    MissionCompletion::create([
+        'user_id' => $student->id,
+        'mission_id' => $otherMission->id,
+        'earned_xp' => 250,
+        'completed_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->get(
+            route('teacher.results.index')
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'learningResultRows',
+        function ($rows) use ($student): bool {
+            $row = $rows->first(
+                fn (array $item): bool =>
+                    $item['student']->id
+                    === $student->id
+            );
+
+            return $row !== null
+                && $row['total_xp'] === 100
+                && $row['completed_missions'] === 1;
+        }
+    );
+}
     /**
      * Membuat satu misi yang dipublikasikan.
      */
