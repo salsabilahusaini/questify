@@ -64,6 +64,50 @@ public function store(
             ),
         ],
     ]);
+    $requestedIsActive =
+    $request->boolean('is_active');
+
+/*
+ * Setelah peserta didik mulai beraktivitas pada
+ * Materi Prakelas, Bagian Materi baru tidak boleh
+ * langsung ditambahkan dalam keadaan aktif karena
+ * dapat mengubah struktur pembelajaran siswa.
+ */
+if ($requestedIsActive) {
+    $hasStudentActivity = DB::table(
+        'material_block_progresses'
+    )
+        ->join(
+            'material_blocks',
+            'material_blocks.id',
+            '=',
+            'material_block_progresses.material_block_id'
+        )
+        ->join(
+            'material_sections',
+            'material_sections.id',
+            '=',
+            'material_blocks.material_section_id'
+        )
+        ->where(
+            'material_sections.mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentActivity) {
+        return redirect()
+            ->route(
+                'teacher.missions.material-sections.create',
+                $mission
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Bagian materi aktif tidak dapat ditambahkan karena materi sudah memiliki aktivitas peserta didik.'
+            );
+    }
+}
 
     /*
      * Membuat slug otomatis dari judul.
@@ -97,8 +141,7 @@ public function store(
         'description' =>
             $validated['description'] ?? null,
         'sequence' => $validated['sequence'],
-        'is_active' =>
-            $request->boolean('is_active'),
+        'is_active' => $requestedIsActive,
     ]);
 
     return redirect()

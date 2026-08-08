@@ -106,6 +106,98 @@ class MaterialSectionManagementTest extends TestCase
             ]
         );
     }
+    /**
+ * Bagian materi aktif baru tidak boleh ditambahkan
+ * setelah terdapat aktivitas peserta didik.
+ */
+public function test_teacher_cannot_add_active_material_section_after_student_activity(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $section = MaterialSection::create([
+        'mission_id' => $mission->id,
+        'title' => 'Bagian Awal',
+        'slug' => 'bagian-awal',
+        'description' =>
+            'Bagian yang sudah digunakan peserta didik.',
+        'sequence' => 1,
+        'is_active' => true,
+    ]);
+
+    $block = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Materi Awal',
+        'content' =>
+            'Materi yang telah dibuka peserta didik.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 20,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    DB::table(
+        'material_block_progresses'
+    )->insert([
+        'user_id' => $student->id,
+        'material_block_id' => $block->id,
+        'first_opened_at' =>
+            now()->subMinutes(5),
+        'last_activity_at' => now(),
+        'total_read_seconds' => 20,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $createRoute = route(
+        'teacher.missions.material-sections.create',
+        $mission
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($createRoute)
+        ->post(
+            route(
+                'teacher.missions.material-sections.store',
+                $mission
+            ),
+            [
+                'title' => 'Bagian Baru',
+                'description' =>
+                    'Bagian baru setelah aktivitas siswa.',
+                'sequence' => 2,
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect($createRoute);
+
+    $response->assertSessionHas(
+        'error',
+        'Bagian materi aktif tidak dapat ditambahkan karena materi sudah memiliki aktivitas peserta didik.'
+    );
+
+    $this->assertDatabaseMissing(
+        'material_sections',
+        [
+            'mission_id' => $mission->id,
+            'title' => 'Bagian Baru',
+        ]
+    );
+}
 
     /**
      * Slug bagian materi dibuat tetap unik
