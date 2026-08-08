@@ -182,14 +182,63 @@ public function store(
          * Checkbox yang tidak dicentang tidak dikirim
          * oleh browser.
          */
-        $validated['is_active'] =
-            $request->boolean('is_active');
+        $requestedIsActive =
+    $request->boolean('is_active');
 
-        /*
-         * Mission ID dan slug tidak ikut diubah agar
-         * struktur materi dan tautan tetap aman.
-         */
-        $section->update($validated);
+/*
+ * Setelah peserta didik mulai beraktivitas pada
+ * Materi Prakelas, status aktif Bagian Materi
+ * tidak boleh diubah karena dapat mengubah
+ * struktur pembelajaran yang sedang berjalan.
+ */
+if (
+    $requestedIsActive !== (bool) $section->is_active
+) {
+    $hasStudentActivity = DB::table(
+        'material_block_progresses'
+    )
+        ->join(
+            'material_blocks',
+            'material_blocks.id',
+            '=',
+            'material_block_progresses.material_block_id'
+        )
+        ->join(
+            'material_sections',
+            'material_sections.id',
+            '=',
+            'material_blocks.material_section_id'
+        )
+        ->where(
+            'material_sections.mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentActivity) {
+        return redirect()
+            ->route(
+                'teacher.missions.material-sections.edit',
+                [
+                    'mission' => $mission,
+                    'section' => $section,
+                ]
+            )
+            ->with(
+                'error',
+                'Status aktif bagian materi tidak dapat diubah karena materi sudah memiliki aktivitas peserta didik.'
+            );
+    }
+}
+
+$validated['is_active'] =
+    $requestedIsActive;
+
+/*
+ * Mission ID dan slug tidak ikut diubah agar
+ * struktur materi dan tautan tetap aman.
+ */
+$section->update($validated);
 
         return redirect()
             ->route(

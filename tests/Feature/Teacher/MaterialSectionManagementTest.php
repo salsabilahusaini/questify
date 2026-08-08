@@ -297,6 +297,108 @@ public function test_material_section_sequence_must_remain_unique_when_updated()
         ]
     );
 }
+/**
+ * Status aktif bagian materi tidak boleh diubah
+ * setelah terdapat aktivitas peserta didik.
+ */
+public function test_teacher_cannot_change_material_section_active_status_after_student_activity(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $section = MaterialSection::create([
+        'mission_id' => $mission->id,
+        'title' => 'Bagian yang Sudah Digunakan',
+        'slug' => 'bagian-yang-sudah-digunakan',
+        'description' =>
+            'Bagian yang sudah memiliki aktivitas siswa.',
+        'sequence' => 1,
+        'is_active' => true,
+    ]);
+
+    $block = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Materi yang Sudah Dibaca',
+        'content' =>
+            'Materi yang telah dibuka peserta didik.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 20,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    DB::table(
+        'material_block_progresses'
+    )->insert([
+        'user_id' => $student->id,
+        'material_block_id' => $block->id,
+        'first_opened_at' =>
+            now()->subMinutes(5),
+        'last_activity_at' => now(),
+        'total_read_seconds' => 20,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.material-sections.edit',
+        [
+            'mission' => $mission,
+            'section' => $section,
+        ]
+    );
+
+    /*
+     * is_active sengaja tidak dikirim sehingga
+     * browser meminta bagian menjadi nonaktif.
+     */
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.material-sections.update',
+                [
+                    'mission' => $mission,
+                    'section' => $section,
+                ]
+            ),
+            [
+                'title' =>
+                    'Bagian yang Sudah Digunakan',
+                'description' =>
+                    'Bagian yang sudah memiliki aktivitas siswa.',
+                'sequence' => 1,
+            ]
+        );
+
+    $response->assertRedirect($editRoute);
+
+    $response->assertSessionHas(
+        'error',
+        'Status aktif bagian materi tidak dapat diubah karena materi sudah memiliki aktivitas peserta didik.'
+    );
+
+    $this->assertDatabaseHas(
+        'material_sections',
+        [
+            'id' => $section->id,
+            'is_active' => true,
+        ]
+    );
+}
     /**
  * Guru dapat menghapus bagian materi yang belum
  * memiliki aktivitas peserta didik.
