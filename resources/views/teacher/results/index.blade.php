@@ -226,6 +226,11 @@ XP, serta penyelesaian misi peserta didik.
                             ) }}%;"
                     ></div>
                 </div>
+                <p
+    class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
+>
+    Dihitung dari peserta didik dengan hasil lengkap.
+</p>
             </article>
         </section>
 
