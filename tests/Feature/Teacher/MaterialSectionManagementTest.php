@@ -688,7 +688,7 @@ public function test_teacher_cannot_delete_material_section_with_student_progres
 
     $response->assertSessionHas(
         'error',
-        'Bagian materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik. Nonaktifkan bagian melalui menu Edit Bagian.'
+        'Bagian materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik.'
     );
 
     $this->assertDatabaseHas(
@@ -839,7 +839,7 @@ public function test_teacher_cannot_delete_material_section_with_micro_exercise_
 
     $response->assertSessionHas(
         'error',
-        'Bagian materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik. Nonaktifkan bagian melalui menu Edit Bagian.'
+        'Bagian materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik.'
     );
 
     $this->assertDatabaseHas(
