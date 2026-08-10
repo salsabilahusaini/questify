@@ -371,6 +371,72 @@ if ($becomesRequiredAndActive) {
         ) {
             $validated['media_path'] = null;
         }
+        /*
+ * Blok yang sudah aktif dan wajib tidak boleh
+ * diubah setelah Materi Prakelas pada misi
+ * memiliki aktivitas peserta didik.
+ */
+$protectedBlockChanged =
+    (bool) $block->is_required
+    && (bool) $block->is_active
+    && (
+        $block->type !== $validated['type']
+        || $block->title !== $validated['title']
+        || $block->content !== $validated['content']
+        || $block->code_language
+            !== $validated['code_language']
+        || $block->media_path
+            !== $validated['media_path']
+        || (int) $block->sequence
+            !== (int) $validated['sequence']
+        || (int) $block->minimum_read_seconds
+            !== (int) $validated[
+                'minimum_read_seconds'
+            ]
+        || (bool) $block->is_required
+            !== (bool) $validated['is_required']
+        || (bool) $block->is_active
+            !== (bool) $validated['is_active']
+    );
+
+if ($protectedBlockChanged) {
+    $hasStudentMaterialActivity = DB::table(
+        'material_block_progresses'
+    )
+        ->join(
+            'material_blocks',
+            'material_blocks.id',
+            '=',
+            'material_block_progresses.material_block_id'
+        )
+        ->join(
+            'material_sections',
+            'material_sections.id',
+            '=',
+            'material_blocks.material_section_id'
+        )
+        ->where(
+            'material_sections.mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentMaterialActivity) {
+        return redirect()
+            ->route(
+                'teacher.missions.material-blocks.edit',
+                [
+                    'mission' => $mission,
+                    'block' => $block,
+                ]
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Blok aktif dan wajib tidak dapat diubah karena materi sudah memiliki aktivitas peserta didik.'
+            );
+    }
+}
 
         $block->update($validated);
 

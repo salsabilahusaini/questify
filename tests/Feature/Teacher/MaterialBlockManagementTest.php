@@ -596,6 +596,111 @@ public function test_teacher_cannot_make_block_required_and_active_after_student
         ]
     );
 }
+/**
+ * Blok aktif dan wajib tidak boleh diubah
+ * setelah materi memiliki aktivitas peserta didik.
+ */
+public function test_teacher_cannot_change_required_active_block_after_student_material_activity(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $section = $this->createSection(
+        $mission
+    );
+
+    $block = MaterialBlock::create([
+        'material_section_id' => $section->id,
+        'type' =>
+            MaterialBlock::TYPE_PARAGRAPH,
+        'title' => 'Materi yang Sudah Digunakan',
+        'content' =>
+            'Isi materi sebelum aktivitas siswa.',
+        'code_language' => null,
+        'media_path' => null,
+        'sequence' => 1,
+        'minimum_read_seconds' => 20,
+        'is_required' => true,
+        'is_active' => true,
+    ]);
+
+    DB::table(
+        'material_block_progresses'
+    )->insert([
+        'user_id' => $student->id,
+        'material_block_id' => $block->id,
+        'first_opened_at' =>
+            now()->subMinutes(5),
+        'last_activity_at' => now(),
+        'total_read_seconds' => 20,
+        'visit_count' => 1,
+        'is_completed' => true,
+        'completed_at' => now(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.material-blocks.edit',
+        [
+            'mission' => $mission,
+            'block' => $block,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.material-blocks.update',
+                [
+                    'mission' => $mission,
+                    'block' => $block,
+                ]
+            ),
+            [
+                'type' =>
+                    MaterialBlock::TYPE_PARAGRAPH,
+                'title' =>
+                    'Materi yang Sudah Digunakan',
+                'content' =>
+                    'Isi materi setelah diubah guru.',
+                'code_language' => null,
+                'media_path' => null,
+                'sequence' => 1,
+                'minimum_read_seconds' => 60,
+                'is_required' => '1',
+                'is_active' => '1',
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Blok aktif dan wajib tidak dapat diubah karena materi sudah memiliki aktivitas peserta didik.'
+    );
+
+    $this->assertDatabaseHas(
+        'material_blocks',
+        [
+            'id' => $block->id,
+            'content' =>
+                'Isi materi sebelum aktivitas siswa.',
+            'minimum_read_seconds' => 20,
+            'is_required' => true,
+            'is_active' => true,
+        ]
+    );
+}
     /**
  * Guru dapat menghapus blok materi yang belum
  * memiliki aktivitas peserta didik.
