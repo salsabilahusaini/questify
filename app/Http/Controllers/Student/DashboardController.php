@@ -51,10 +51,34 @@ class DashboardController extends Controller
          * Misi aktif ditentukan berdasarkan misi yang telah
          * dipublikasikan dan memiliki urutan paling awal.
          */
-        $activeMission = Mission::query()
-            ->where('is_published', true)
-            ->orderBy('sequence')
-            ->first();
+        /*
+ * Misi aktif adalah misi published dengan urutan
+ * paling awal yang belum diselesaikan siswa.
+ */
+$activeMission = Mission::query()
+    ->where('is_published', true)
+    ->whereNotIn(
+        'id',
+        MissionCompletion::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->select('mission_id')
+    )
+    ->orderBy('sequence')
+    ->first();
+
+/*
+ * Jika seluruh misi published sudah selesai,
+ * tampilkan misi terakhir sebagai pencapaian terbaru.
+ */
+if ($activeMission === null) {
+    $activeMission = Mission::query()
+        ->where('is_published', true)
+        ->orderByDesc('sequence')
+        ->first();
+}
 
         $missionProgress = 0;
         $pretestCompleted = false;
@@ -192,7 +216,6 @@ $missionProgress = (int) round(
     ($completedStepCount / 6) * 100
 );
         }
-
         return view('student.dashboard', [
             'completedMissionCount' =>
                 $completedMissionCount,

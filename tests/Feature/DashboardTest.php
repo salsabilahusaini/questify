@@ -57,6 +57,57 @@ class DashboardTest extends TestCase
         $response->assertOk();
     }
     /**
+ * Dashboard memilih misi published berikutnya
+ * yang belum diselesaikan oleh peserta didik.
+ */
+public function test_student_dashboard_uses_next_incomplete_published_mission(): void
+{
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $completedMission = Mission::create([
+        'title' => 'Misi Pertama',
+        'slug' => 'dashboard-misi-pertama',
+        'description' =>
+            'Misi pertama yang sudah diselesaikan.',
+        'sequence' => 1,
+        'xp_reward' => 100,
+        'is_published' => true,
+    ]);
+
+    $nextMission = Mission::create([
+        'title' => 'Misi Kedua',
+        'slug' => 'dashboard-misi-kedua',
+        'description' =>
+            'Misi berikutnya yang belum diselesaikan.',
+        'sequence' => 2,
+        'xp_reward' => 100,
+        'is_published' => true,
+    ]);
+
+    MissionCompletion::create([
+        'user_id' => $student->id,
+        'mission_id' => $completedMission->id,
+        'earned_xp' => 100,
+        'completed_at' => now(),
+    ]);
+
+    $response = $this
+        ->actingAs($student)
+        ->get(
+            route('student.dashboard')
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'activeMission',
+        fn ($activeMission): bool =>
+            $activeMission?->id === $nextMission->id
+    );
+}
+    /**
  * Dashboard menghitung lima dari enam tahap
  * yang selesai sebagai progres 83 persen.
  */
