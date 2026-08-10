@@ -881,7 +881,7 @@ public function test_teacher_cannot_delete_material_block_with_student_progress(
 
     $response->assertSessionHas(
         'error',
-        'Blok materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+        'Blok materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik.'
     );
 
     $this->assertDatabaseHas(
@@ -1016,7 +1016,7 @@ public function test_teacher_cannot_delete_material_block_with_micro_exercise_an
 
     $response->assertSessionHas(
         'error',
-        'Blok materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+        'Blok materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik.'
     );
 
     $this->assertDatabaseHas(

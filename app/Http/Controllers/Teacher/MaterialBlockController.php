@@ -484,7 +484,7 @@ public function destroy(
             )
             ->with(
                 'error',
-                'Blok materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+                'Blok materi tidak dapat dihapus karena sudah memiliki riwayat aktivitas peserta didik.'
             );
     }
 
@@ -515,7 +515,7 @@ public function destroy(
             )
             ->with(
                 'error',
-                'Blok materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik. Nonaktifkan blok melalui menu Edit Blok.'
+                'Blok materi tidak dapat dihapus karena Latihan Mikro di dalamnya sudah memiliki jawaban peserta didik.'
             );
     }
 
