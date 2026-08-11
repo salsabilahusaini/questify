@@ -379,8 +379,8 @@ $posttestCompleted =
                             </p>
 
                             <p class="mt-2 text-sm font-semibold text-neutral-900 dark:text-white">
-                                Konsep dan fungsi perulangan
-                            </p>
+    {{ $activeMission?->title ?? 'Belum ada misi aktif' }}
+</p>
                         </div>
 
                         <div class="rounded-2xl border border-violet-100 bg-violet-50/70 p-4 dark:border-violet-900/60 dark:bg-violet-950/30">

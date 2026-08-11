@@ -106,6 +106,13 @@ public function test_student_dashboard_uses_next_incomplete_published_mission():
         fn ($activeMission): bool =>
             $activeMission?->id === $nextMission->id
     );
+    $response->assertSee(
+    'Misi Kedua'
+);
+
+$response->assertDontSee(
+    'Konsep dan fungsi perulangan'
+);
 }
     /**
  * Dashboard menghitung lima dari enam tahap
