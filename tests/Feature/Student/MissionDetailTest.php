@@ -73,6 +73,55 @@ class MissionDetailTest extends TestCase
     }
 
     /**
+ * Deskripsi Materi Prakelas tidak boleh
+ * terikat pada materi Perulangan.
+ */
+public function test_material_step_description_is_generic_for_any_mission(): void
+{
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = Mission::create([
+        'title' => 'Memahami Konsep Array',
+        'slug' => 'detail-misi-array-test',
+        'description' =>
+            'Misi pengujian materi Array.',
+        'sequence' => 2,
+        'xp_reward' => 100,
+        'is_published' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($student)
+        ->get(
+            route(
+                'student.missions.show',
+                [
+                    'mission' => $mission->slug,
+                ]
+            )
+        );
+
+    $response->assertOk();
+
+    $response->assertViewHas(
+        'steps',
+        function (array $steps): bool {
+            $materialStep = collect($steps)
+                ->firstWhere(
+                    'key',
+                    'material'
+                );
+
+            return $materialStep !== null
+                && $materialStep['description']
+                    === 'Pelajari materi melalui bacaan bertahap dan checkpoint.';
+        }
+    );
+}
+
+    /**
      * Seluruh tahap yang telah selesai dapat
      * dibuka kembali dari halaman Detail Misi.
      */

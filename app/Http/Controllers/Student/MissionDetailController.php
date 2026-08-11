@@ -126,7 +126,7 @@ class MissionDetailController extends Controller
                 'key' => 'material',
                 'title' => 'Materi Prakelas',
                 'description' =>
-                    'Pelajari materi perulangan melalui bacaan bertahap dan checkpoint.',
+    'Pelajari materi melalui bacaan bertahap dan checkpoint.',
                 'status' => $materialCompleted
                     ? 'completed'
                     : (
