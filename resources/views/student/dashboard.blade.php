@@ -389,8 +389,9 @@ $posttestCompleted =
                             </p>
 
                             <p class="mt-2 text-sm font-semibold text-neutral-900 dark:text-white">
-                                Menganalisis alur program
-                            </p>
+    {{ $activeMission?->finalChallenge?->title
+        ?? 'Belum ada tantangan aktif' }}
+</p>
                         </div>
 
                         <div class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30">

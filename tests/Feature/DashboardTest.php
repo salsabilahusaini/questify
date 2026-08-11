@@ -86,6 +86,19 @@ public function test_student_dashboard_uses_next_incomplete_published_mission():
         'is_published' => true,
     ]);
 
+    FinalChallenge::create([
+    'mission_id' => $nextMission->id,
+    'title' => 'Tantangan Misi Kedua',
+    'scenario' =>
+        'Selesaikan tantangan pada misi kedua.',
+    'instructions' =>
+        'Kerjakan tantangan sesuai petunjuk.',
+    'starter_code' => null,
+    'expected_output' => null,
+    'max_points' => 100,
+    'is_active' => true,
+]);
+
     MissionCompletion::create([
         'user_id' => $student->id,
         'mission_id' => $completedMission->id,
@@ -108,6 +121,14 @@ public function test_student_dashboard_uses_next_incomplete_published_mission():
     );
     $response->assertSee(
     'Misi Kedua'
+);
+
+$response->assertSee(
+    'Tantangan Misi Kedua'
+);
+
+$response->assertDontSee(
+    'Menganalisis alur program'
 );
 
 $response->assertDontSee(
