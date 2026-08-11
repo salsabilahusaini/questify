@@ -96,6 +96,13 @@ public function test_pretest_questions_follow_saved_question_order(): void
         'Pertanyaan kedua tentang perulangan.',
         'Pertanyaan pertama tentang perulangan.',
     ]);
+
+    $response->assertSeeInOrder([
+    'Soal 1',
+    'Pertanyaan kedua tentang perulangan.',
+    'Soal 2',
+    'Pertanyaan pertama tentang perulangan.',
+]);
 }
 
     /**

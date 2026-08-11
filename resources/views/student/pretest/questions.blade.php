@@ -51,12 +51,12 @@
                     <section class="quest-card p-6">
                         <div class="flex items-start gap-4">
                             <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-bold text-white">
-                                {{ $question->sequence }}
+                                {{ $loop->iteration }}
                             </div>
 
                             <div class="min-w-0 flex-1">
                                 <p class="text-sm font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
-                                    Soal {{ $question->sequence }}
+                                    Soal Soal {{ $loop->iteration }}
                                 </p>
 
                                 <h2 class="mt-2 text-lg font-bold leading-7 text-neutral-950 dark:text-white">
