@@ -115,6 +115,55 @@ public function test_posttest_page_is_rejected_before_final_challenge_is_complet
     );
 }
 
+/**
+ * Memulai Posttest secara langsung ditolak
+ * sebelum Final Challenge diselesaikan.
+ */
+public function test_posttest_cannot_be_started_before_final_challenge_is_completed(): void
+{
+    FinalChallengeAttempt::query()
+        ->where('user_id', $this->student->id)
+        ->where('mission_id', $this->mission->id)
+        ->delete();
+
+    PosttestAttempt::query()
+        ->where('user_id', $this->student->id)
+        ->where('mission_id', $this->mission->id)
+        ->delete();
+
+    $response = $this
+        ->actingAs($this->student)
+        ->post(
+            route(
+                'student.missions.posttest.start',
+                [
+                    'mission' => $this->mission->slug,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'student.missions.show',
+            [
+                'mission' => $this->mission->slug,
+            ]
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Selesaikan Final Challenge terlebih dahulu.'
+    );
+
+    $this->assertDatabaseMissing(
+        'posttest_attempts',
+        [
+            'user_id' => $this->student->id,
+            'mission_id' => $this->mission->id,
+        ]
+    );
+}
     /**
  * Soal Posttest ditampilkan berdasarkan urutan
  * yang tersimpan pada attempt siswa.
