@@ -199,6 +199,27 @@ public function store(
             $mission,
             $finalChallenge
         );
+        $hasStudentAttempt = FinalChallengeAttempt::query()
+    ->where(
+        'final_challenge_id',
+        $finalChallenge->id
+    )
+    ->exists();
+
+if ($hasStudentAttempt) {
+    return redirect()
+        ->route(
+            'teacher.missions.final-challenge.edit',
+            [
+                'mission' => $mission,
+                'finalChallenge' => $finalChallenge,
+            ]
+        )
+        ->with(
+            'error',
+            'Final Challenge tidak dapat diubah karena sudah ada peserta didik yang memulai Final Challenge.'
+        );
+}
 
         $validated = $request->validate([
             'title' => [
