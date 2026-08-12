@@ -191,6 +191,104 @@ public function test_teacher_can_create_posttest_question(): void
         ]
     );
 }
+
+/**
+ * Soal Posttest aktif baru tidak boleh ditambahkan
+ * setelah peserta didik mulai mengerjakan Posttest.
+ */
+public function test_teacher_cannot_add_active_posttest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions(
+        $question
+    );
+
+    PosttestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PosttestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $createRoute = route(
+        'teacher.missions.posttest.create',
+        $mission
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($createRoute)
+        ->post(
+            route(
+                'teacher.missions.posttest.store',
+                $mission
+            ),
+            [
+                'question_text' =>
+                    'Soal aktif baru setelah siswa mulai Posttest.',
+                'sequence' => 2,
+                'is_active' => '1',
+                'correct_option_index' => 0,
+                'options' => [
+                    [
+                        'option_text' =>
+                            'Pilihan pertama',
+                        'sequence' => 1,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan kedua',
+                        'sequence' => 2,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan ketiga',
+                        'sequence' => 3,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan keempat',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $createRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Posttest aktif tidak dapat ditambahkan karena sudah ada peserta didik yang memulai Posttest.'
+    );
+
+    $this->assertDatabaseMissing(
+        'posttest_questions',
+        [
+            'mission_id' => $mission->id,
+            'question_text' =>
+                'Soal aktif baru setelah siswa mulai Posttest.',
+        ]
+    );
+}
     /**
      * Guru dapat memperbarui pertanyaan,
      * pilihan, kunci jawaban, dan status soal.
@@ -295,6 +393,198 @@ public function test_teacher_can_create_posttest_question(): void
             ]
         );
     }
+    /**
+ * Soal Posttest tidak boleh diubah setelah
+ * peserta didik mulai mengerjakan Posttest.
+ */
+public function test_teacher_cannot_update_posttest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    PosttestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PosttestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.posttest.edit',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.posttest.update',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            ),
+            [
+                'question_text' =>
+                    'Soal Posttest yang telah diubah guru.',
+                'sequence' => 1,
+                'is_active' => '1',
+                'correct_option_id' =>
+                    $options[1]->id,
+                'options' => [
+                    $options[0]->id => [
+                        'option_text' =>
+                            'Pilihan pertama diubah',
+                        'sequence' => 1,
+                    ],
+                    $options[1]->id => [
+                        'option_text' =>
+                            'Pilihan kedua diubah',
+                        'sequence' => 2,
+                    ],
+                    $options[2]->id => [
+                        'option_text' =>
+                            'Pilihan ketiga diubah',
+                        'sequence' => 3,
+                    ],
+                    $options[3]->id => [
+                        'option_text' =>
+                            'Pilihan keempat diubah',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Posttest tidak dapat diubah karena sudah ada peserta didik yang memulai Posttest.'
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_questions',
+        [
+            'id' => $question->id,
+            'question_text' =>
+                'Aktivitas manakah yang menggunakan perulangan?',
+            'is_active' => true,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_options',
+        [
+            'id' => $options[0]->id,
+            'option_text' =>
+                'Menampilkan angka secara berulang',
+            'is_correct' => true,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_options',
+        [
+            'id' => $options[1]->id,
+            'option_text' =>
+                'Menyimpan satu nilai',
+            'is_correct' => false,
+        ]
+    );
+}
+
+/**
+ * Soal Posttest tidak boleh dihapus setelah
+ * peserta didik mulai mengerjakan Posttest.
+ */
+public function test_teacher_cannot_delete_posttest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions(
+        $question
+    );
+
+    PosttestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PosttestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.posttest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Posttest tidak dapat dihapus karena sudah ada peserta didik yang memulai Posttest.'
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+}
     /**
  * Guru dapat menghapus soal Posttest yang belum
  * pernah memiliki jawaban peserta didik.

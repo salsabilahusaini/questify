@@ -131,6 +131,34 @@ public function store(
             'in:0,1,2,3',
         ],
     ]);
+    /*
+ * Soal Posttest aktif baru tidak boleh ditambahkan
+ * setelah ada peserta didik yang mulai mengerjakan
+ * Posttest pada misi ini.
+ */
+if ($request->boolean('is_active')) {
+    $hasStudentAttempt = DB::table(
+        'posttest_attempts'
+    )
+        ->where(
+            'mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentAttempt) {
+        return redirect()
+            ->route(
+                'teacher.missions.posttest.create',
+                $mission
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Soal Posttest aktif tidak dapat ditambahkan karena sudah ada peserta didik yang memulai Posttest.'
+            );
+    }
+}
 
     DB::transaction(function () use (
         $request,
@@ -214,6 +242,36 @@ public function store(
             $mission,
             $question
         );
+        /*
+ * Bank soal Posttest tidak boleh diubah setelah
+ * ada peserta didik yang mulai mengerjakan Posttest.
+ * Perubahan soal atau kunci jawaban dapat membuat
+ * attempt siswa tidak lagi konsisten.
+ */
+$hasStudentAttempt = DB::table(
+    'posttest_attempts'
+)
+    ->where(
+        'mission_id',
+        $mission->id
+    )
+    ->exists();
+
+if ($hasStudentAttempt) {
+    return redirect()
+        ->route(
+            'teacher.missions.posttest.edit',
+            [
+                'mission' => $mission,
+                'question' => $question,
+            ]
+        )
+        ->withInput()
+        ->with(
+            'error',
+            'Soal Posttest tidak dapat diubah karena sudah ada peserta didik yang memulai Posttest.'
+        );
+}
 
         $question->load('options');
 
@@ -372,6 +430,32 @@ public function destroy(
                 'Soal Posttest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
             );
     }
+
+    /*
+ * Soal Posttest juga tidak boleh dihapus ketika
+ * sudah ada peserta didik yang memulai Posttest,
+ * meskipun jawaban belum disimpan.
+ */
+$hasStudentAttempt = DB::table(
+    'posttest_attempts'
+)
+    ->where(
+        'mission_id',
+        $mission->id
+    )
+    ->exists();
+
+if ($hasStudentAttempt) {
+    return redirect()
+        ->route(
+            'teacher.missions.posttest.index',
+            $mission
+        )
+        ->with(
+            'error',
+            'Soal Posttest tidak dapat dihapus karena sudah ada peserta didik yang memulai Posttest.'
+        );
+}
 
     $question->delete();
 
