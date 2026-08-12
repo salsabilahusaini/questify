@@ -297,10 +297,11 @@ if ($hasStudentAttempt) {
                 'max:1000',
             ],
             'options.*.sequence' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
+    'required',
+    'integer',
+    'min:1',
+    'distinct',
+],
             'correct_option_id' => [
                 'required',
                 'integer',

@@ -393,6 +393,101 @@ public function test_teacher_cannot_add_active_posttest_question_after_student_a
             ]
         );
     }
+
+    /**
+ * Urutan pilihan Posttest harus unik
+ * ketika soal diperbarui.
+ */
+public function test_teacher_cannot_update_posttest_question_with_duplicate_option_sequences(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $editRoute = route(
+        'teacher.missions.posttest.edit',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.posttest.update',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            ),
+            [
+                'question_text' =>
+                    'Aktivitas manakah yang menggunakan perulangan?',
+                'sequence' => 1,
+                'is_active' => '1',
+                'correct_option_id' =>
+                    $options[0]->id,
+                'options' => [
+                    $options[0]->id => [
+                        'option_text' =>
+                            'Menampilkan angka secara berulang',
+                        'sequence' => 1,
+                    ],
+                    $options[1]->id => [
+                        'option_text' =>
+                            'Menyimpan satu nilai',
+                        'sequence' => 1,
+                    ],
+                    $options[2]->id => [
+                        'option_text' =>
+                            'Memilih satu kondisi',
+                        'sequence' => 3,
+                    ],
+                    $options[3]->id => [
+                        'option_text' =>
+                            'Menghentikan program',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHasErrors([
+        'options.'.$options[0]->id.'.sequence',
+        'options.'.$options[1]->id.'.sequence',
+    ]);
+
+    $this->assertDatabaseHas(
+        'posttest_options',
+        [
+            'id' => $options[0]->id,
+            'sequence' => 1,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'posttest_options',
+        [
+            'id' => $options[1]->id,
+            'sequence' => 2,
+        ]
+    );
+}
     /**
  * Soal Posttest tidak boleh diubah setelah
  * peserta didik mulai mengerjakan Posttest.
