@@ -192,6 +192,296 @@ class PretestQuestionManagementTest extends TestCase
             ]
         );
     }
+
+    /**
+ * Soal Pretest aktif baru tidak boleh ditambahkan
+ * setelah peserta didik mulai mengerjakan Pretest.
+ */
+public function test_teacher_cannot_add_active_pretest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions(
+        $question
+    );
+
+    PretestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PretestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $createRoute = route(
+        'teacher.missions.pretest.create',
+        $mission
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($createRoute)
+        ->post(
+            route(
+                'teacher.missions.pretest.store',
+                $mission
+            ),
+            [
+                'question_text' =>
+                    'Soal aktif baru setelah siswa mulai.',
+                'sequence' => 2,
+                'is_active' => '1',
+                'correct_option_index' => 0,
+                'options' => [
+                    [
+                        'option_text' =>
+                            'Pilihan pertama',
+                        'sequence' => 1,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan kedua',
+                        'sequence' => 2,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan ketiga',
+                        'sequence' => 3,
+                    ],
+                    [
+                        'option_text' =>
+                            'Pilihan keempat',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $createRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Pretest aktif tidak dapat ditambahkan karena sudah ada peserta didik yang memulai Pretest.'
+    );
+
+    $this->assertDatabaseMissing(
+        'pretest_questions',
+        [
+            'mission_id' => $mission->id,
+            'question_text' =>
+                'Soal aktif baru setelah siswa mulai.',
+        ]
+    );
+}
+    /**
+ * Soal Pretest tidak boleh diubah setelah
+ * peserta didik mulai mengerjakan Pretest.
+ */
+public function test_teacher_cannot_update_pretest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    PretestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PretestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $editRoute = route(
+        'teacher.missions.pretest.edit',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.pretest.update',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            ),
+            [
+                'question_text' =>
+                    'Soal yang telah diubah guru.',
+                'sequence' => 1,
+                'is_active' => '1',
+                'correct_option_id' =>
+                    $options[1]->id,
+                'options' => [
+                    $options[0]->id => [
+                        'option_text' =>
+                            'Pilihan pertama diubah',
+                        'sequence' => 1,
+                    ],
+                    $options[1]->id => [
+                        'option_text' =>
+                            'Pilihan kedua diubah',
+                        'sequence' => 2,
+                    ],
+                    $options[2]->id => [
+                        'option_text' =>
+                            'Pilihan ketiga diubah',
+                        'sequence' => 3,
+                    ],
+                    $options[3]->id => [
+                        'option_text' =>
+                            'Pilihan keempat diubah',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Pretest tidak dapat diubah karena sudah ada peserta didik yang memulai Pretest.'
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_questions',
+        [
+            'id' => $question->id,
+            'question_text' =>
+                'Aktivitas manakah yang menggunakan perulangan?',
+            'is_active' => true,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_options',
+        [
+            'id' => $options[0]->id,
+            'option_text' =>
+                'Menampilkan angka secara berulang',
+            'is_correct' => true,
+        ]
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_options',
+        [
+            'id' => $options[1]->id,
+            'option_text' =>
+                'Menyimpan satu nilai',
+            'is_correct' => false,
+        ]
+    );
+}
+
+/**
+ * Soal Pretest tidak boleh dihapus setelah
+ * peserta didik mulai mengerjakan Pretest.
+ */
+public function test_teacher_cannot_delete_pretest_question_after_student_attempt_started(): void
+{
+    $teacher = $this->createTeacher();
+
+    $student = User::factory()->create([
+        'role' => User::ROLE_STUDENT,
+    ]);
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions(
+        $question
+    );
+
+    PretestAttempt::create([
+        'user_id' => $student->id,
+        'mission_id' => $mission->id,
+        'status' =>
+            PretestAttempt::STATUS_IN_PROGRESS,
+        'started_at' => now(),
+        'total_questions' => 1,
+        'correct_answers' => 0,
+        'question_order' => [
+            $question->id,
+        ],
+    ]);
+
+    $response = $this
+        ->actingAs($teacher)
+        ->delete(
+            route(
+                'teacher.missions.pretest.destroy',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            )
+        );
+
+    $response->assertRedirect(
+        route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+    );
+
+    $response->assertSessionHas(
+        'error',
+        'Soal Pretest tidak dapat dihapus karena sudah ada peserta didik yang memulai Pretest.'
+    );
+
+    $this->assertDatabaseHas(
+        'pretest_questions',
+        [
+            'id' => $question->id,
+        ]
+    );
+}
 /**
  * Guru dapat menghapus soal Pretest yang belum
  * pernah memiliki jawaban peserta didik.

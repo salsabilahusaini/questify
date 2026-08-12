@@ -132,6 +132,35 @@ public function store(
         ],
     ]);
 
+    /*
+ * Soal Pretest aktif baru tidak boleh ditambahkan
+ * setelah ada peserta didik yang mulai mengerjakan
+ * Pretest pada misi ini.
+ */
+if ($request->boolean('is_active')) {
+    $hasStudentAttempt = DB::table(
+        'pretest_attempts'
+    )
+        ->where(
+            'mission_id',
+            $mission->id
+        )
+        ->exists();
+
+    if ($hasStudentAttempt) {
+        return redirect()
+            ->route(
+                'teacher.missions.pretest.create',
+                $mission
+            )
+            ->withInput()
+            ->with(
+                'error',
+                'Soal Pretest aktif tidak dapat ditambahkan karena sudah ada peserta didik yang memulai Pretest.'
+            );
+    }
+}
+
     DB::transaction(function () use (
         $request,
         $mission,
@@ -214,6 +243,36 @@ public function store(
             $mission,
             $question
         );
+        /*
+ * Bank soal Pretest tidak boleh diubah setelah
+ * ada peserta didik yang mulai mengerjakan Pretest.
+ * Perubahan soal atau kunci jawaban dapat membuat
+ * attempt siswa tidak lagi konsisten.
+ */
+$hasStudentAttempt = DB::table(
+    'pretest_attempts'
+)
+    ->where(
+        'mission_id',
+        $mission->id
+    )
+    ->exists();
+
+if ($hasStudentAttempt) {
+    return redirect()
+        ->route(
+            'teacher.missions.pretest.edit',
+            [
+                'mission' => $mission,
+                'question' => $question,
+            ]
+        )
+        ->withInput()
+        ->with(
+            'error',
+            'Soal Pretest tidak dapat diubah karena sudah ada peserta didik yang memulai Pretest.'
+        );
+}
 
         $question->load('options');
 
@@ -372,6 +431,32 @@ public function destroy(
                 'Soal Pretest tidak dapat dihapus karena sudah memiliki jawaban peserta didik. Nonaktifkan soal melalui menu Edit Soal.'
             );
     }
+
+    /*
+ * Soal Pretest juga tidak boleh dihapus ketika
+ * sudah ada peserta didik yang memulai Pretest,
+ * meskipun jawaban belum disimpan.
+ */
+$hasStudentAttempt = DB::table(
+    'pretest_attempts'
+)
+    ->where(
+        'mission_id',
+        $mission->id
+    )
+    ->exists();
+
+if ($hasStudentAttempt) {
+    return redirect()
+        ->route(
+            'teacher.missions.pretest.index',
+            $mission
+        )
+        ->with(
+            'error',
+            'Soal Pretest tidak dapat dihapus karena sudah ada peserta didik yang memulai Pretest.'
+        );
+}
 
     $question->delete();
 
