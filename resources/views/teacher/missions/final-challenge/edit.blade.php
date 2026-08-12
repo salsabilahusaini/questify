@@ -104,6 +104,13 @@
                 </div>
             </div>
         </section>
+        @if (session('error'))
+    <div
+        class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+    >
+        {{ session('error') }}
+    </div>
+@endif
 
         {{-- Form edit --}}
         <section class="quest-card p-6">
