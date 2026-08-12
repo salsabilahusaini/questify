@@ -68,14 +68,14 @@
                             <div
                                 class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 font-bold text-white"
                             >
-                                {{ $question->sequence }}
+                                {{ $loop->iteration }}
                             </div>
 
                             <div class="min-w-0 flex-1">
                                 <p
                                     class="text-sm font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400"
                                 >
-                                    Soal {{ $question->sequence }}
+                                    Soal {{ $loop->iteration }}
                                 </p>
 
                                 <h2
