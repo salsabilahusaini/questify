@@ -255,6 +255,15 @@
                                             required
                                             class="mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                         >
+                                        @error(
+    'options.'
+    . $option->id
+    . '.sequence'
+)
+    <p class="mt-2 text-sm text-red-600">
+        {{ $message }}
+    </p>
+@enderror
                                     </div>
                                 </div>
                             </div>
