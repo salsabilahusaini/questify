@@ -193,6 +193,180 @@ public function test_teacher_can_create_posttest_question(): void
 }
 
 /**
+ * Urutan soal Posttest harus unik
+ * dalam satu misi.
+ */
+public function test_teacher_cannot_create_posttest_question_with_duplicate_sequence(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $existingQuestion = $this->createQuestion(
+        $mission
+    );
+
+    $this->createOptions(
+        $existingQuestion
+    );
+
+    $createRoute = route(
+        'teacher.missions.posttest.create',
+        $mission
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($createRoute)
+        ->post(
+            route(
+                'teacher.missions.posttest.store',
+                $mission
+            ),
+            [
+                'question_text' =>
+                    'Soal Posttest dengan urutan yang sama.',
+                'sequence' => 1,
+                'is_active' => '1',
+                'correct_option_index' => 0,
+                'options' => [
+                    [
+                        'option_text' => 'Pilihan pertama',
+                        'sequence' => 1,
+                    ],
+                    [
+                        'option_text' => 'Pilihan kedua',
+                        'sequence' => 2,
+                    ],
+                    [
+                        'option_text' => 'Pilihan ketiga',
+                        'sequence' => 3,
+                    ],
+                    [
+                        'option_text' => 'Pilihan keempat',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $createRoute
+    );
+
+    $response->assertSessionHasErrors([
+        'sequence',
+    ]);
+
+    $this->assertDatabaseCount(
+        'posttest_questions',
+        1
+    );
+}
+
+/**
+ * Urutan soal Posttest harus tetap unik
+ * ketika soal diperbarui.
+ */
+public function test_teacher_cannot_update_posttest_question_with_duplicate_sequence(): void
+{
+    $teacher = $this->createTeacher();
+
+    $mission = $this->createMission();
+
+    $question = $this->createQuestion(
+        $mission
+    );
+
+    $options = $this->createOptions(
+        $question
+    );
+
+    $secondQuestion = PosttestQuestion::create([
+    'mission_id' => $mission->id,
+    'question_text' => 'Soal Posttest kedua.',
+    'sequence' => 2,
+    'is_active' => true,
+]);
+
+$this->assertDatabaseHas(
+    'posttest_questions',
+    [
+        'id' => $secondQuestion->id,
+        'mission_id' => $mission->id,
+        'sequence' => 2,
+    ]
+);
+
+    $editRoute = route(
+        'teacher.missions.posttest.edit',
+        [
+            'mission' => $mission,
+            'question' => $question,
+        ]
+    );
+
+    $response = $this
+        ->actingAs($teacher)
+        ->from($editRoute)
+        ->put(
+            route(
+                'teacher.missions.posttest.update',
+                [
+                    'mission' => $mission,
+                    'question' => $question,
+                ]
+            ),
+            [
+                'question_text' =>
+                    'Aktivitas manakah yang menggunakan perulangan?',
+                'sequence' => 2,
+                'is_active' => '1',
+                'correct_option_id' =>
+                    $options[0]->id,
+                'options' => [
+                    $options[0]->id => [
+                        'option_text' =>
+                            'Menampilkan angka secara berulang',
+                        'sequence' => 1,
+                    ],
+                    $options[1]->id => [
+                        'option_text' =>
+                            'Menyimpan satu nilai',
+                        'sequence' => 2,
+                    ],
+                    $options[2]->id => [
+                        'option_text' =>
+                            'Memilih satu kondisi',
+                        'sequence' => 3,
+                    ],
+                    $options[3]->id => [
+                        'option_text' =>
+                            'Menghentikan program',
+                        'sequence' => 4,
+                    ],
+                ],
+            ]
+        );
+
+    $response->assertRedirect(
+        $editRoute
+    );
+
+    $response->assertSessionHasErrors([
+        'sequence',
+    ]);
+
+    $this->assertDatabaseHas(
+        'posttest_questions',
+        [
+            'id' => $question->id,
+            'sequence' => 1,
+        ]
+    );
+}
+
+/**
  * Soal Posttest aktif baru tidak boleh ditambahkan
  * setelah peserta didik mulai mengerjakan Posttest.
  */

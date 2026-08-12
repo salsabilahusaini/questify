@@ -105,10 +105,19 @@ public function store(
             'max:5000',
         ],
         'sequence' => [
-            'required',
-            'integer',
-            'min:1',
-        ],
+    'required',
+    'integer',
+    'min:1',
+    Rule::unique(
+        'posttest_questions',
+        'sequence'
+    )->where(
+        fn ($query) => $query->where(
+            'mission_id',
+            $mission->id
+        )
+    ),
+],
         'options' => [
             'required',
             'array',
@@ -282,10 +291,21 @@ if ($hasStudentAttempt) {
                 'max:5000',
             ],
             'sequence' => [
-                'required',
-                'integer',
-                'min:1',
-            ],
+    'required',
+    'integer',
+    'min:1',
+    Rule::unique(
+        'posttest_questions',
+        'sequence'
+    )
+        ->ignore($question->id)
+        ->where(
+            fn ($query) => $query->where(
+                'mission_id',
+                $mission->id
+            )
+        ),
+],
             'options' => [
                 'required',
                 'array',
